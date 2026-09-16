@@ -158,10 +158,10 @@
 	import Footer from '@/components/Footer.vue';
 	import CompleteProfileDialog from '@/components/CompleteProfileDialog.vue';
 	import { getFormat } from '@/utils'
-	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
+	import { initialKioskLanguage, kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	const router = useRouter();
-	let selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
+	let selectedLanguage = ref(initialKioskLanguage());
 
 	let translations = {
 		newAppointment: {

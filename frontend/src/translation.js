@@ -4,6 +4,7 @@ const APPOINTMENT_DESK_CONTEXT = 'Marley Frontend Appointment Desk'
 const QUEUE_CONTEXT = 'Marley Frontend Queue'
 const BED_MANAGEMENT_CONTEXT = 'Marley Frontend Bed Management'
 const KIOSK_CONTEXT = 'Marley Frontend Kiosk'
+const DEFAULT_KIOSK_LANGUAGES = ['en', 'ar', 'ml']
 
 let translatedMessages = {}
 
@@ -47,6 +48,20 @@ export function kioskCatalogMessage(catalog, language, key) {
 	const source = catalog.en?.[key] ?? catalog[key]?.en
 	const existing = catalog[language]?.[key] ?? catalog[key]?.[language]
 	return existing ?? kioskTranslation(source, language)
+}
+
+export function availableKioskLanguages() {
+	const configured = globalThis.window?.clinic_kiosk_languages
+	return Array.isArray(configured) && configured.length
+		? configured
+		: DEFAULT_KIOSK_LANGUAGES
+}
+
+export function initialKioskLanguage() {
+	const available = availableKioskLanguages()
+	const saved = globalThis.localStorage?.getItem('selectedLanguage')
+	const effective = globalThis.window?.language?.toLowerCase().split('-')[0]
+	return [saved, effective, 'en'].find(language => available.includes(language)) ?? available[0]
 }
 
 export async function loadTranslations({ fetcher = fetch, timeout = TRANSLATION_LOAD_TIMEOUT } = {}) {

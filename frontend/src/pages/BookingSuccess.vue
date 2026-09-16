@@ -71,7 +71,7 @@
 	import { ref } from "vue";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
-	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation';
+	import { initialKioskLanguage, kioskCatalogMessage, kioskTranslation as t } from '@/translation';
 
 	const router = useRouter();
 
@@ -97,7 +97,7 @@
 		},
 	};
 
-	const selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
+	const selectedLanguage = ref(initialKioskLanguage());
 
 	// Function to change language and save it in local storage
 	const changeLanguage = (language) => {

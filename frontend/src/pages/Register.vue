@@ -264,7 +264,7 @@
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
 	import { getFormat } from '@/utils'
-	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
+	import { initialKioskLanguage, kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	const firstname = ref("");
 	const lastname = ref("");
@@ -273,7 +273,7 @@
 	const passport_number = ref("");
 	let gender = ref(null);
 	let genderOptions = ref([]);
-	let selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
+	let selectedLanguage = ref(initialKioskLanguage());
 	let country = ref({ "label": "India", "value": "India" });
 	let countryOptions = ref([]);
 	const router = useRouter();

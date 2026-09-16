@@ -161,12 +161,12 @@
 <script setup>
 	import { useRouter } from "vue-router";
 	import { Button, FormControl, Dialog, createResource } from "frappe-ui";
-	import { computed, ref, onMounted } from "vue";
+	import { computed, ref } from "vue";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
 	import CompleteProfileDialog from '@/components/CompleteProfileDialog.vue';
 	import defaultLogo from '@/assets/MH-logo.svg'
-	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
+	import { initialKioskLanguage, kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	let patient_id = ref("");
 	let dialog = ref(false);
@@ -246,21 +246,13 @@
 		},
 	};
 
-	const selectedLanguage = ref("en"); // Default language
+	const selectedLanguage = ref(initialKioskLanguage());
 
 	// Function to change language and save it in local storage
 	const changeLanguage = (language) => {
 		selectedLanguage.value = language;
 		localStorage.setItem("selectedLanguage", language);
 	};
-
-	// Retrieve language from local storage or use default
-	onMounted(() => {
-		const savedLanguage = localStorage.getItem("selectedLanguage");
-		if (savedLanguage) {
-			selectedLanguage.value = savedLanguage;
-		}
-	});
 
 	const router = useRouter();
 

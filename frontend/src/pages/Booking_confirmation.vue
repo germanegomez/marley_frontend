@@ -121,11 +121,11 @@
 
 <script setup>
 	import { useRouter, useRoute } from "vue-router";
-	import { ref, onMounted } from "vue";
+	import { ref } from "vue";
 	import { createResource, Dialog, Breadcrumbs } from "frappe-ui";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
-	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation';
+	import { initialKioskLanguage, kioskCatalogMessage, kioskTranslation as t } from '@/translation';
 
 	// Define translations
 	const translations = {
@@ -147,7 +147,7 @@
 	};
 
 	// Set the language dynamically based on local storage or default to English
-	const selectedLanguage = ref("en");
+	const selectedLanguage = ref(initialKioskLanguage());
 	const router = useRouter();
 	const route = useRoute();
 	let patient_id = ref(localStorage.getItem("patient_id") || null);
@@ -176,13 +176,6 @@
 		},
 	})
 	get_logo.fetch()
-
-	onMounted(() => {
-		const savedLanguage = localStorage.getItem("selectedLanguage");
-		if (savedLanguage) {
-			selectedLanguage.value = savedLanguage;
-		}
-	});
 
 	// Function to change the language and update local storage
 	const changeLanguage = (language) => {
