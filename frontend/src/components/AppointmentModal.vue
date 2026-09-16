@@ -96,11 +96,11 @@
 						<FormControl type="text" v-model="reg_email" :label="t('Email ID')"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="select" :options="genderOptions" variant="subtle" :label="t('Select Gender')" v-model="reg_gender" :required="true" />
+						<FormControl type="select" :options="genderOptions" variant="subtle" :label="t('Select Gender')" :placeholder="t('Select Gender')" v-model="reg_gender" :required="true" />
 						<ErrorMessage v-if="errors.gender" :message="errors.gender"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')"/>
+						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')" :placeholder="t('Marital Status')"/>
 					</div>
 					<div class="py-1 w-full">
 						<FormControl type="number" v-model="reg_age" :label="t('Age')"/>
@@ -391,7 +391,10 @@
 		url: "/api/method/marley_frontend.api.get_gender",
 		method: "GET",
 		onSuccess(response) {
-			genderOptions.value = response.gender_list;
+			genderOptions.value = response.gender_list.map(value => ({
+				label: t(value),
+				value,
+			}));
 		},
 		onError(error) {
 			error_dialog.value = true;
