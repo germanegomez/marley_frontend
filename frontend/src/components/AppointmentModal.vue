@@ -6,12 +6,12 @@
 		}"
 	>
 		<template #body-title>
-			<h3 class="text-ink-gray-8">Book an Appointment</h3>
+			<h3 class="text-ink-gray-8">{{ t('Book an Appointment') }}</h3>
 		</template>
 		<template #body-content>
 			<div class="flex gap-2 mb-4">
 				<Switch
-					label="New Patient"
+					:label="t('New Patient')"
 					:disabled="false"
 					v-model="is_new_patient"
 				/>
@@ -20,7 +20,7 @@
 			<div v-if="!is_new_patient">
 				<div class="flex gap-2 mb-4">
 					<div class="flex-1 w-auto">
-						<FormControl type="autocomplete" :options="patientOptions" variant="subtle" label="Select Patient" v-model="book_patient"
+						<FormControl type="autocomplete" :options="patientOptions" variant="subtle" :label="t('Select Patient')" v-model="book_patient"
 							:required="true"
 						>
 							<template #prefix></template>
@@ -34,25 +34,25 @@
 						<ErrorMessage v-if="errors.patient" :message="errors.patient"/>
 					</div>
 					<div class="flex-1 w-auto">
-						<FormControl type="text" variant="subtle" label="Patient ID" v-model="book_patient_id" :required="false" :disabled="true" />
+						<FormControl type="text" variant="subtle" :label="t('Patient ID')" v-model="book_patient_id" :required="false" :disabled="true" />
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
-					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">Appointment Details</h4>
+					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Appointment Details') }}</h4>
 				</div>
 				<div class="grid grid-cols-2 gap-2">
 					<div class="py-1 w-full">
-						<FormControl type="autocomplete" :options="practitionerOptions" variant="subtle" label="Select Practitioner" v-model="practitioner"
+						<FormControl type="autocomplete" :options="practitionerOptions" variant="subtle" :label="t('Select Practitioner')" v-model="practitioner"
 							:required="true" />
 						<ErrorMessage v-if="errors.practitioner" :message="errors.practitioner"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="autocomplete" :options="appointmentTypeOptions" variant="subtle" label="Select Appointment Type" v-model="appointment_type"
+						<FormControl type="autocomplete" :options="appointmentTypeOptions" variant="subtle" :label="t('Select Appointment Type')" v-model="appointment_type"
 							:required="true" />
 						<ErrorMessage v-if="errors.appointment_type" :message="errors.appointment_type"/>
 					</div>
 					<div class="py-1 w-full">
-						<DatePicker v-model="date" label="Appointment Date" variant="subtle" placeholder="Select Date" :required="true" :formatter="(date) => getFormat(date, '', true)" />
+						<DatePicker v-model="date" :label="t('Appointment Date')" variant="subtle" :placeholder="t('Select Date')" :required="true" :formatter="(date) => getFormat(date, '', true)" />
 						<ErrorMessage v-if="errors.date" :message="errors.date"/>
 					</div>
 				</div>
@@ -60,7 +60,7 @@
 					<div class="rounded-lg p-4 mb-4">
 						<div v-if="isLoadingSlots" class="flex justify-center items-center h-48">
 							<div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full" style="border-top-color: #b3bf79;" role="status">
-							<span class="sr-only text-ink-gray-8">Loading...</span>
+							<span class="sr-only text-ink-gray-8">{{ t('Loading...') }}</span>
 							</div>
 						</div>
 						<div class="grid grid-cols-2 md:grid-cols-8 gap-4" v-if="slots">
@@ -69,7 +69,7 @@
 									? 'bg-surface-gray-5 text-white'
 									: 'bg-surface-white hover:bg-surface-gray-4 border shadow-sm',
 								'text-xs font-medium py-0.5 px-1 rounded-md'
-							]" :variant="'subtle'" theme="gray" label="Slots" @click="selectedSlot = slot" />
+							]" :variant="'subtle'" theme="gray" @click="selectedSlot = slot" />
 						</div>
 					</div>
 					<div class="flex-1 w-auto">
@@ -82,70 +82,70 @@
 			<div v-if="is_new_patient">
 				<div class="grid grid-cols-3 gap-2 pb-2">
 					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" label="First Name" v-model="reg_firstName" :required="true" />
+						<FormControl type="text" variant="subtle" :label="t('First Name')" v-model="reg_firstName" :required="true" />
 						<ErrorMessage v-if="errors.firstName" :message="errors.firstName"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" label="Last Name" v-model="reg_lastName" />
+						<FormControl type="text" variant="subtle" :label="t('Last Name')" v-model="reg_lastName" />
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" label="Contact Number" v-model="reg_contactNumber" :required="true" />
+						<FormControl type="text" variant="subtle" :label="t('Contact Number')" v-model="reg_contactNumber" :required="true" />
 						<ErrorMessage v-if="errors.contactNumber" :message="errors.contactNumber"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="text" v-model="reg_email" label="Email ID"/>
+						<FormControl type="text" v-model="reg_email" :label="t('Email ID')"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="select" :options="genderOptions" variant="subtle" label="Select Gender" v-model="reg_gender" :required="true" />
+						<FormControl type="select" :options="genderOptions" variant="subtle" :label="t('Select Gender')" v-model="reg_gender" :required="true" />
 						<ErrorMessage v-if="errors.gender" :message="errors.gender"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="select" :options="['Single', 'Married', 'Divorced', 'Widow']" v-model="reg_marital_status" label="Marital Status"/>
+						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="number" v-model="reg_age" label="Age"/>
+						<FormControl type="number" v-model="reg_age" :label="t('Age')"/>
 					</div>
 					<div class="py-1 w-full">
 						<DatePicker
 							v-model="reg_dob"
 							variant="subtle"
-							placeholder="Date of Birth"
+							:placeholder="t('Date of Birth')"
 							:disabled="false"
-							label="Date of Birth"
+							:label="t('Date of Birth')"
 							:formatter="(date) => getFormat(date, '', true)"
 						/>
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
-					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">Address & Contact</h4>
+					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Address & Contact') }}</h4>
 				</div>
 
 				<div class="grid grid-cols-3 gap-2">
 					<div class="py-1 w-full">
-						<FormControl label="Address Line 1" v-model="reg_addressLine1" type="text" variant="subtle" :disabled="false" />
+						<FormControl :label="t('Address Line 1')" v-model="reg_addressLine1" type="text" variant="subtle" :disabled="false" />
 					</div>
 					<div class="py-1 w-full">
-						<FormControl label="City/District" v-model="reg_city" type="text" variant="subtle" :disabled="false" />
+						<FormControl :label="t('City/District')" v-model="reg_city" type="text" variant="subtle" :disabled="false" />
 					</div>
 					<div class="py-1 w-full">
-						<FormControl label="State/Province" v-model="reg_state" type="text" variant="subtle" :disabled="false" />
+						<FormControl :label="t('State/Province')" v-model="reg_state" type="text" variant="subtle" :disabled="false" />
 					</div>
 					<div class="py-1 w-full">
-						<FormControl label="Address Line 2" v-model="reg_addressLine2" type="text" variant="subtle" :disabled="false" />
+						<FormControl :label="t('Address Line 2')" v-model="reg_addressLine2" type="text" variant="subtle" :disabled="false" />
 					</div>
 					<div class="py-1 w-full">
-						<FormControl label="ZIP Code" v-model="reg_zip" type="text" variant="subtle" :disabled="false" />
+						<FormControl :label="t('ZIP Code')" v-model="reg_zip" type="text" variant="subtle" :disabled="false" />
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
-					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">Source Details</h4>
+					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Source Details') }}</h4>
 				</div>
 				<div class="grid grid-cols-3 gap-2">
 					<div class="py-1 w-full">
-						<FormControl label="Source" v-model="reg_source" type="select" :options="source_options" variant="subtle" :disabled="false"/>
+						<FormControl :label="t('Source')" v-model="reg_source" type="select" :options="source_options" variant="subtle" :disabled="false"/>
 					</div>
 					<div v-if="reg_source == 'Employee'" class="py-1 w-full">
-						<FormControl label="Employee" v-model="reg_employee" type="autocomplete" :options="employee_options" variant="subtle" :disabled="false" />
+						<FormControl :label="t('Employee')" v-model="reg_employee" type="autocomplete" :options="employee_options" variant="subtle" :disabled="false" />
 					</div>
 				</div>
 				<ErrorMessage v-if="errors.registration_error" :message="errors.registration_error"/>
@@ -163,7 +163,7 @@
 					:disabled="registration_loader"
 					:variant="'solid'"
 					theme="gray"
-					label="Register Patient"
+					:label="t('Register Patient')"
 					@click="patient_registration()"
 				/>
 			</div>
@@ -173,7 +173,7 @@
 					:disabled="booking_loader"
 					:variant="'solid'"
 					theme="gray"
-					label="Book Appointment"
+					:label="t('Book Appointment')"
 					@click="check_and_make_appointment()"
 				/>
 			</div>
@@ -182,6 +182,7 @@
 </template>
 
 <script setup>
+	import { appointmentDeskTranslation as t } from '@/translation'
 	import { ref, watch } from 'vue'
 	import { createResource, Switch, DatePicker, ErrorMessage } from "frappe-ui"
 	import { getFormat } from '@/utils'
@@ -213,6 +214,10 @@
 	const reg_gender = ref("");
 	const reg_dob = ref("");
 	const reg_marital_status = ref("");
+	const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widow'].map(value => ({
+		label: t(value),
+		value,
+	}));
 	const reg_addressLine1 = ref("");
 	const reg_addressLine2 = ref("");
 	const reg_city = ref("");
@@ -284,17 +289,17 @@
 		});
 
 		if (!reg_firstName.value) {
-			errors.value.firstName = "This field is required";
+			errors.value.firstName = t('This field is required');
 		} else {
 			errors.value.firstName = "";
 		}
 		if (!reg_contactNumber.value) {
-			errors.value.contactNumber = "This field is required";
+			errors.value.contactNumber = t('This field is required');
 		} else {
 			errors.value.contactNumber = "";
 		}
 		if (!reg_gender.value) {
-			errors.value.gender = "This field is required";
+			errors.value.gender = t('This field is required');
 		} else {
 			errors.value.gender = "";
 		}
@@ -308,17 +313,17 @@
 
 	const check_and_make_appointment = async () => {
 		if (!book_patient.value) {
-			errors.value.patient = "This field is required";
+			errors.value.patient = t('This field is required');
 		} else {
 			errors.value.patient = "";
 		}
 		if (!practitioner.value) {
-			errors.value.practitioner = "This field is required";
+			errors.value.practitioner = t('This field is required');
 		} else {
 			errors.value.practitioner = "";
 		}
 		if (!appointment_type.value) {
-			errors.value.appointment_type = "This field is required";
+			errors.value.appointment_type = t('This field is required');
 		} else {
 			errors.value.appointment_type = "";
 		}
@@ -345,8 +350,8 @@
 		},
 		onSuccess() {
 			booking_loader.value = false;
-			dialog_message = "Appointment booked successfully";
-			dialog_title = "Appointment Booked";
+			dialog_message = t('Appointment booked successfully');
+			dialog_title = t('Appointment Booked');
 			success_dialog.value = true;
 
 			show.value = false;
@@ -357,13 +362,13 @@
 			booking_loader.value = false;
 			if (error) {
 				if (error.message.includes("OverlapError")) {
-					dialog_message = "Selected patient already have an appointment for the day. Please choose another time slot";
-					dialog_title = "Appointment Booking Failed";
+					dialog_message = t('Selected patient already have an appointment for the day. Please choose another time slot');
+					dialog_title = t('Appointment Booking Failed');
 					alert_dialog.value = true;
 					show.value = false;
 				} else {
 					dialog_message = error.messages?.[0] || error;
-					dialog_title = "Appointment Booking Failed";
+					dialog_title = t('Appointment Booking Failed');
 					alert_dialog.value = true;
 				}
 			}
@@ -404,7 +409,7 @@
 		},
 		onError: (error) => {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Fetching Masters Failed";
+			dialog_title = t('Fetching Masters Failed');
 			error_dialog.value = true;
 		},
 	});
@@ -429,7 +434,7 @@
 	watch(date, () => {
 		fetch_slots_in_dialog();
 		if (!date.value) {
-			errors.value.date = "This field is required";
+			errors.value.date = t('This field is required');
 		} else {
 			errors.value.date = null;
 		}
@@ -438,7 +443,7 @@
 	watch(practitioner, (practitioner) => {
 		fetch_slots_in_dialog();
 		if (!practitioner) {
-			errors.value.practitioner = "This field is required";
+			errors.value.practitioner = t('This field is required');
 		} else {
 			errors.value.practitioner = null;
 		}
@@ -466,7 +471,7 @@
 			},
 			onSuccess(response) {
 				if (!response) {
-					errors.value.fetch_slot_error = "No Available slot for selected Date."
+					errors.value.fetch_slot_error = t('No Available slot for selected Date.')
 				} else if (response.status == "error") {
 					errors.value.fetch_slot_error = response.message;
 				} else {
@@ -475,7 +480,7 @@
 				}
 			},
 			onError(error) {
-				errors.value.fetch_slot_error = `Unable to fetch slots: ${error}`;
+				errors.value.fetch_slot_error = t('Unable to fetch slots: {0}', error);
 			},
 		});
 
@@ -484,7 +489,7 @@
 			slots.value = [];
 			await fetch_slots_in_dialog_.submit();
 		} catch (error) {
-			errors.value.fetch_slot_error = `Unable to fetch slots: ${error}`;
+			errors.value.fetch_slot_error = t('Unable to fetch slots: {0}', error);
 		} finally {
 			isLoadingSlots.value = false;
 		}

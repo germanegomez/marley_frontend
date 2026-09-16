@@ -2,12 +2,12 @@
 	<div class="flex-1 flex flex-col h-full overflow-auto bg-surface-white">
 		<LayoutHeader>
 			<template #left-header>
-				<ViewBreadcrumbs v-model="viewControls" routeName="Waitlist" routeLabel="Appointment Desk" />
+				<ViewBreadcrumbs v-model="viewControls" routeName="Waitlist" :routeLabel="t('Appointment Desk')" />
 			</template>
 			<template #right-header>
 				<Button
 					variant="solid"
-					:label="'Book'"
+					:label="t('Book')"
 					@click="onBookClick()"
 				>
 					<template #prefix><FeatherIcon name="plus" class="h-4" /></template>
@@ -60,7 +60,7 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK'),
 				variant: 'solid',
 			},
 		],
@@ -77,7 +77,7 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK'),
 				variant: 'solid',
 			},
 		],
@@ -85,6 +85,7 @@
 </template>
 
 <script setup>
+	import { appointmentDeskTranslation as t } from '@/translation'
 	import { ref, computed, watch, reactive, onMounted, inject } from 'vue'
 	import LayoutHeader from '@/components/LayoutHeader.vue'
 	import ViewBreadcrumbs from '@/components/ViewBreadcrumbs.vue'
@@ -157,16 +158,16 @@
 	// }
 
 	let appointment_tabs = computed(() => [
-		{ label: `All (${total_count.value})`, "name": "All", "appointments": all_appointments.value },
-		{ label: `Open (${open_count.value})`, "name": "Open", "appointments": opened_appointments.value },
-		{ label: `Scheduled (${scheduled_count.value})`, "name": "Scheduled", "appointments": scheduled_appointments.value },
-		{ label: `Confirmed (${confirm_count.value})`, "name": "Confirmed", "appointments": confirmed_appointments.value },
-		{ label: `Checked In (${checkin_count.value})`, "name": "Checked In", "appointments": Checked_in_appointments.value },
-		{ label: `Attending (${attending_count.value})`, "name": "Attending", "appointments": attending_appointments.value },
-		{ label: `Checked Out (${check_out_count.value})`, "name": "Checked Out", "appointments": Check_out_appointments.value },
-		{ label: `Consulted (${closed_count.value})`, "name": "Consulted", "appointments": closed_appointments.value },
-		{ label: `Cancelled (${cancelled_count.value})`, "name": "Cancelled", "appointments": cancelled_appointments.value },
-		{ label: `No Show (${no_show_count.value})`, "name": "No Show", "appointments": No_show_appointments.value }
+		{ label: t('All ({0})', total_count.value), "name": "All", "appointments": all_appointments.value },
+		{ label: t('Open ({0})', open_count.value), "name": "Open", "appointments": opened_appointments.value },
+		{ label: t('Scheduled ({0})', scheduled_count.value), "name": "Scheduled", "appointments": scheduled_appointments.value },
+		{ label: t('Confirmed ({0})', confirm_count.value), "name": "Confirmed", "appointments": confirmed_appointments.value },
+		{ label: t('Checked In ({0})', checkin_count.value), "name": "Checked In", "appointments": Checked_in_appointments.value },
+		{ label: t('Attending ({0})', attending_count.value), "name": "Attending", "appointments": attending_appointments.value },
+		{ label: t('Checked Out ({0})', check_out_count.value), "name": "Checked Out", "appointments": Check_out_appointments.value },
+		{ label: t('Consulted ({0})', closed_count.value), "name": "Consulted", "appointments": closed_appointments.value },
+		{ label: t('Cancelled ({0})', cancelled_count.value), "name": "Cancelled", "appointments": cancelled_appointments.value },
+		{ label: t('No Show ({0})', no_show_count.value), "name": "No Show", "appointments": No_show_appointments.value }
 	]);
 
 	let Appointmentlist = createResource({
@@ -215,7 +216,7 @@
 		},
 		onError(error) {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Failed to load appointments";
+			dialog_title = t('Failed to load appointments');
 			alert_dialog.value = true;
 		}
 	});
@@ -270,7 +271,7 @@
 		},
 		onError: (error) => {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Appointment Type fetching failed";
+			dialog_title = t('Appointment Type fetching failed');
 			alert_dialog.value = true;
 		},
 	});

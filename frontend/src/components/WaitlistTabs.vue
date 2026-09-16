@@ -34,7 +34,7 @@
 											<div v-else>
 												<FeatherIcon :name="'user'" class="h-5 w-5" />
 											</div>
-											<Tooltip :text="'Patient: ' + row.patient_name" placement="top">
+											<Tooltip :text="t('Patient: {0}', row.patient_name)" placement="top">
 												<Button :ref_for="true" size="md" label="patient_button" :disabled="false"  :variant="'ghost'"
 													@click="open_patient_desk(row)">
 													{{ row.patient_name }}
@@ -45,7 +45,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'hash'" class="h-3 w-3" />
 											</div>
-											<Tooltip :text="'Patient ID: ' + row.patient_id" placement="top">
+											<Tooltip :text="t('Patient ID: {0}', row.patient_id)" placement="top">
 												<div class="py-1 px-1 text-center text-base">
 													{{ row.patient_id }}
 												</div>
@@ -55,7 +55,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'phone'" class="h-3 w-3" />
 											</div>
-											<Tooltip :text="'Contact: ' + row.mobile" placement="top">
+											<Tooltip :text="t('Contact: {0}', row.mobile)" placement="top">
 												<div class="py-1 px-1 text-center text-base">
 													{{ row.mobile }}
 												</div>
@@ -71,7 +71,7 @@
 											<div v-else>
 												<FeatherIcon :name="'user'" class="h-3 w-3" />
 											</div>
-											<Tooltip :text="'Practitioner: ' + row.practitioner_name" placement="top">
+											<Tooltip :text="t('Practitioner: {0}', row.practitioner_name)" placement="top">
 												<div class="px-1 text-center text-base">
 													{{ row.practitioner_name }}
 												</div>
@@ -81,7 +81,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'bookmark'" class="h-4 w-4" />
 											</div>
-											<Tooltip :text="'Department: ' + row.name" placement="top">
+											<Tooltip :text="t('Department: {0}', row.department)" placement="top">
 												<div class="px-1 text-center text-base">
 													{{ row.department }}
 												</div>
@@ -94,7 +94,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'type'" class="h-4 w-4" />
 											</div>
-											<Tooltip :text="'Appointment Type: ' + row.appointment_type" placement="top">
+											<Tooltip :text="t('Appointment Type: {0}', row.appointment_type)" placement="top">
 												<div class="py-1 px-1 text-center text-base">
 													{{ row.appointment_type }}
 												</div>
@@ -104,7 +104,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'file-text'" class="h-4 w-4" />
 											</div>
-											<Tooltip :text="'Appointment ID: ' + row.name" placement="top">
+											<Tooltip :text="t('Appointment ID: {0}', row.name)" placement="top">
 												<div class="px-1 text-center text-base">
 													{{ row.name }}
 												</div>
@@ -116,7 +116,7 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'clock'" class="h-4 w-4" />
 											</div>
-											<Tooltip :text="'Appointment Time: ' + row.booked_time" placement="top">
+											<Tooltip :text="t('Appointment Time: {0}', row.booked_time)" placement="top">
 												<div class="px-1 text-center text-base">
 													{{ row.booked_time }}
 												</div>
@@ -126,9 +126,9 @@
 											<div class="flex items-center">
 												<FeatherIcon :name="'log-in'" class="h-4 w-4" />
 											</div>
-											<Tooltip :text="'Checkin Time: ' + row.checkin_time" placement="top">
+											<Tooltip :text="t('Checkin Time: {0}', row.checkin_time)" placement="top">
 												<div class="py-1 px-1 text-center text-base">
-													{{ row.checkin_time || 'Not Checked In' }}
+													{{ row.checkin_time || t('Not Checked In') }}
 												</div>
 											</Tooltip>
 										</div>
@@ -140,7 +140,7 @@
 											</div>
 											<div v-if="row.token_status == 'Expired'"
 												class="px-1 py-1 text-xss place-content-center !text-red-600">
-												({{ row.token_status }})
+												({{ t(row.token_status) }})
 											</div>
 										</div>
 									</div>
@@ -148,12 +148,12 @@
 										<div class="px-1 py-1 text-center place-content-center">
 											<div class="px-1 py-1 text-xs !text-green-600 place-content-center"
 												v-if="row.consulted">
-												Consulted
+												{{ t('Consulted') }}
 											</div>
 											<div class="space-x-2">
-												<Button :variant="'outline'" size="sm" :label="row.status"
+												<Button :variant="'outline'" size="sm" :label="t(row.status)"
 													:class="row.statusClass" @click="handleStatusClick(row)">
-													{{ row.status }}
+													{{ t(row.status) }}
 												</Button>
 											</div>
 											<div class="px-1 py-1 text-xss !text-green-500 place-content-center"
@@ -162,11 +162,11 @@
 											</div>
 											<div class="px-1 py-1 text-xss !text-red-400 place-content-center"
 												v-if="row.custom_cancel_reason">
-												Reason: {{ row.custom_cancel_reason }}
+												{{ t('Reason:') }} {{ row.custom_cancel_reason }}
 											</div>
 											<div class="px-1 py-1 text-xss !text-orange-400 place-content-center"
 												v-else-if="row.custom_reschedule_reason">
-												Reason: {{ row.custom_reschedule_reason }}
+												{{ t('Reason:') }} {{ row.custom_reschedule_reason }}
 											</div>
 										</div>
 									</div>
@@ -174,9 +174,9 @@
 										<div class="border rounded-md">
 											<div class="flex-1 px-1 py-1 justify-center items-center flex space-x-1">
 												<Button :ref_for="true" theme="ghost" size="md"
-													label="Create Vitals" :disabled="row.has_token" @click="openVitalsDialogue(row)">
+													:label="t('Create Vitals')" :disabled="row.has_token" @click="openVitalsDialogue(row)">
 													<div class="flex items-center truncate">
-														<Tooltip :text="'Add Vitals'" placement="top">
+														<Tooltip :text="t('Add Vitals')" placement="top">
 															<slot name="icon">
 																<FeatherIcon :name="'activity'"
 																	class="size-5 text-ink-gray-7" />
@@ -185,10 +185,10 @@
 													</div>
 												</Button>
 												<Button
-													:ref_for="true" theme="ghost" size="md" label="Goto Encounter"
+													:ref_for="true" theme="ghost" size="md" :label="t('Goto Encounter')"
 													:disabled="row.has_encounter"
 													@click="navigateToDoctype(row.encounter)">
-													<Tooltip :text="'Go to Encounter'" placement="top">
+													<Tooltip :text="t('Go to Encounter')" placement="top">
 														<slot name="icon">
 															<FeatherIcon :name="'plus-square'"
 																class="size-5 text-ink-gray-7" />
@@ -208,14 +208,14 @@
 												<Button :ref_for="true" theme="ghost" size="md"
 													label="reschedule_button" :disabled="false"
 													@click="rescheduleAppointment(row)">
-													<Tooltip :text="'Reschedule'" placement="top">
+													<Tooltip :text="t('Reschedule')" placement="top">
 														<RescheduleIcon class="size-5 text-ink-gray-7"></RescheduleIcon>
 													</Tooltip>
 												</Button>
 												<Button :ref_for="true" theme="ghost" size="md"
-													label="Print Boarding Pass" :disabled="row.has_token" @click="print_boarding_pass(row)">
+													:label="t('Print Boarding Pass')" :disabled="row.has_token" @click="print_boarding_pass(row)">
 													<div class="flex items-center truncate">
-														<Tooltip :text="'Print Boarding Pass'" placement="top">
+														<Tooltip :text="t('Print Boarding Pass')" placement="top">
 															<slot name="icon">
 																<FeatherIcon :name="'printer'"
 																	class="size-5 text-ink-gray-7" />
@@ -228,8 +228,8 @@
 											<div class="flex-1 px-1 py-1 flex justify-center items-center space-x-2">
 												<Button
 													:ref_for="true" theme="ghost" size="md"
-													label="Invoice Services" @click="open_healthcare_service(row)">
-													<Tooltip :text="'Invoice Services'" placement="top">
+													:label="t('Invoice Services')" @click="open_healthcare_service(row)">
+													<Tooltip :text="t('Invoice Services')" placement="top">
 														<slot name="icon">
 															<FeatherIcon :name="'dollar-sign'"
 																class="size-5 text-ink-gray-7" />
@@ -237,9 +237,9 @@
 													</Tooltip>
 												</Button>
 												<Button :ref_for="true" theme="ghost" size="md"
-													label="Invoice Prescription" @click="open_prescription_dialog(row)">
+													:label="t('Invoice Prescription')" @click="open_prescription_dialog(row)">
 													<div class="flex items-center truncate">
-														<Tooltip :text="'Invoice Prescriptions'" placement="top">
+														<Tooltip :text="t('Invoice Prescriptions')" placement="top">
 															<slot name="icon">
 																<PillIcon class="size-5 text-ink-gray-7"></PillIcon>
 															</slot>
@@ -250,7 +250,7 @@
 										</div>
 									</div>
 									<div v-if="column.key == 'patient_balance'">
-										<Tooltip :text="'Patient Balance: ' + String(row.balance_with_currency)" placement="top">
+										<Tooltip :text="t('Patient Balance: {0}', String(row.balance_with_currency))" placement="top">
 											<div v-if="row.balance <= 0" class="sm items-center text-green-600">
 												{{ row.balance_with_currency }}
 											</div>
@@ -287,7 +287,7 @@
 			},
 			actions: [
 				{
-					label: 'OK',
+					label: t('OK'),
 					variant: 'solid',
 				},
 			],
@@ -307,7 +307,7 @@
 			},
 			actions: [
 				{
-					label: 'OK',
+					label: t('OK'),
 					variant: 'solid',
 				},
 			],
@@ -319,34 +319,34 @@
 	<!-- status Dialog -->
 	<Dialog v-model="openStatusDialog" :options="{size: 'xl'}">
 		<template #body-title>
-			<h5 class="font-bold text-ink-gray-8">Change Status</h5>
+			<h5 class="font-bold text-ink-gray-8">{{ t('Change Status') }}</h5>
 		</template>
 		<template #body-content>
 			<div class="grid grid-cols-3 gap-2">
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Patient ID"
-						:disabled="true" label="Patient ID" v-model="status_patient_id" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient ID')"
+						:disabled="true" :label="t('Patient ID')" v-model="status_patient_id" />
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="Patient Name" :disabled="true" label="Patient Name"
+						:placeholder="t('Patient Name')" :disabled="true" :label="t('Patient Name')"
 						v-model="status_patient" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Appointment ID"
-						:disabled="true" label="Appointment ID" v-model="status_appointment_id" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Appointment ID')"
+						:disabled="true" :label="t('Appointment ID')" v-model="status_appointment_id" />
 				</div>
 			</div>
 		</template>
 		<template #actions>
 			<Button variant="solid" v-if="showcheckinButton" @click="updateAppointmentStatus('Checked In')">
-				Checkin
+				{{ t('Checkin') }}
 			</Button>
 			<Button class="ml-2" v-if="showConfirmButton" @click="updateAppointmentStatus('Confirmed')">
-				Confirm
+				{{ t('Confirm') }}
 			</Button>
 			<Button class="ml-2" @click="updateAppointmentStatus('Cancelled')">
-				Cancel
+				{{ t('Cancel') }}
 			</Button>
 		</template>
 	</Dialog>
@@ -358,56 +358,56 @@
 			size: '3xl',
 		}"		>
 		<template #body-title>
-			<h3 class="font-bold text-ink-gray-8">Vital Signs Details</h3>
+			<h3 class="font-bold text-ink-gray-8">{{ t('Vital Signs Details') }}</h3>
 		</template>
 		<template #body-content>
 			<div class="grid grid-cols-3 gap-2 py-2">
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="patient name" :disabled="true" label="Patient" v-model="appointment" />
+						placeholder="patient name" :disabled="true" :label="t('Patient')" v-model="appointment" />
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="id"
-						:disabled="true" label="Appointment" v-model="appointmentID" />
+						:disabled="true" :label="t('Appointment')" v-model="appointmentID" />
 				</div>
 			</div>
 			<div class="grid grid-cols-3 gap-2 py-2">
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="Blood Pressure(systolic)" :disabled="vitals_submitted" label="BP(Systolic)"
+						:placeholder="t('Blood Pressure(systolic)')" :disabled="vitals_submitted" :label="t('BP(Systolic)')"
 						v-model="bp_systolic" />
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="Blood Pressure(diastolic)" :disabled="vitals_submitted" label="BP(Diastolic)"
+						:placeholder="t('Blood Pressure(diastolic)')" :disabled="vitals_submitted" :label="t('BP(Diastolic)')"
 						v-model="bp_diastolic" />
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="Respiratory Rate" :disabled="vitals_submitted" label="Respiratory Rate"
+						:placeholder="t('Respiratory Rate')" :disabled="vitals_submitted" :label="t('Respiratory Rate')"
 						v-model="respiratory_rate" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Pulse Rate"
-						:disabled="vitals_submitted" label="Pulse Rate" v-model="pulse" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Pulse Rate')"
+						:disabled="vitals_submitted" :label="t('Pulse Rate')" v-model="pulse" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Weight"
-						:disabled="vitals_submitted" label="Weight (in KG)" v-model="weight" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Weight')"
+						:disabled="vitals_submitted" :label="t('Weight (in KG)')" v-model="weight" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Height"
-						:disabled="vitals_submitted" label="Height (in Meter)" v-model="height" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Height')"
+						:disabled="vitals_submitted" :label="t('Height (in Meter)')" v-model="height" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Temperature"
-						:disabled="vitals_submitted" label="Temperature (in °C)" v-model="temperature" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Temperature')"
+						:disabled="vitals_submitted" :label="t('Temperature (in °C)')" v-model="temperature" />
 				</div>
 			</div>
 			<div class="grid grid-cols-2 gap-2 py-2">
 				<div class="py-1 w-full">
-					<FormControl :type="'textarea'" :ref_for="true" size="sm" variant="subtle" placeholder="Notes"
-						:disabled="vitals_submitted" label="Notes" v-model="notes" />
+					<FormControl :type="'textarea'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Notes')"
+						:disabled="vitals_submitted" :label="t('Notes')" v-model="notes" />
 				</div>
 			</div>
 		</template>
@@ -421,7 +421,7 @@
 						},
 					},
 					{
-						label: 'Submit',
+						label: t('Submit'),
 						variant: 'solid',
 						onClick: () => {
 							submit_vital.submit()
@@ -429,7 +429,7 @@
 					},
 				]"
 				:button="{
-					label: 'Save / Submit',
+					label: t('Save / Submit'),
 					variant: 'solid',
 				}"
 			/>
@@ -444,36 +444,36 @@
 		}"
 	>
 		<template #body-title>
-			<h3 class="font-bold text-ink-gray-8">Reschedule Appointment</h3>
+			<h3 class="font-bold text-ink-gray-8">{{ t('Reschedule Appointment') }}</h3>
 		</template>
 		<template #body-content>
 			<div class="grid grid-cols-2 gap-2">
 				<div class="flex-1 w-auto py-2">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" label="Patient":disabled="true"
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :label="t('Patient')":disabled="true"
 						v-model="patient_name_reschedule" />
 				</div>
 				<div class="flex-1 w-auto py-2">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" label="Appointment ID":disabled="true"
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :label="t('Appointment ID')":disabled="true"
 						v-model="newid" />
 				</div>
 				<div class="flex-1 w-auto py-2">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" label="Practitioner":disabled="true"
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :label="t('Practitioner')":disabled="true"
 						v-model="reschedule_practitioner" />
 				</div>
 				<div class="flex-1 w-auto py-2">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" label="Practitioner ID":disabled="true"
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :label="t('Practitioner ID')":disabled="true"
 						v-model="reschedule_practitioner_id" />
 				</div>
 				<div class="flex-1 w-auto py-2">
-					<DatePicker v-model="reschedule_date" variant="subtle" label="Select Date" placeholder="Select Date" :disabled="false"
+					<DatePicker v-model="reschedule_date" variant="subtle" :label="t('Select Date')" :placeholder="t('Select Date')" :disabled="false"
 						:formatter="(date) => getFormat(date, '', true)" />
 				</div>
 			</div>
 			<div v-if="slots.length" class="py-2 px-2">
-				<div class="text-xl font-semibold text-ink-gray-8 mb-4">Available Slots</div>
+				<div class="text-xl font-semibold text-ink-gray-8 mb-4">{{ t('Available Slots') }}</div>
 				<div v-if="isLoading" class="flex justify-center items-center h-48">
 					<div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full" style="border-top-color: #b3bf79;" role="status">
-					<span class="sr-only text-ink-gray-8">Loading...</span>
+					<span class="sr-only text-ink-gray-8">{{ t('Loading...') }}</span>
 					</div>
 				</div>
 				<div class="grid grid-cols-2 md:grid-cols-8 gap-4">
@@ -482,7 +482,7 @@
 							? 'bg-surface-gray-5 text-white'
 							: 'bg-surface-white hover:bg-surface-gray-4 border shadow-sm',
 						'text-xs font-medium py-0.5 px-1 rounded-md'
-					]" :variant="'subtle'" theme="gray" label="Slots" @click="selectedSlot = slot" />
+							]" :variant="'subtle'" theme="gray" @click="selectedSlot = slot" />
 				</div>
 			</div>
 			<div v-if="errors.fetch_slot_error" class="flex-1 w-auto">
@@ -491,7 +491,7 @@
 		</template>
 		<template #actions>
 			<div class="flex justify-center">
-				<Button v-if="selectedSlot" :variant="'solid'" theme="gray" label="Confirm" @click="reschedule_booking.submit()" />
+				<Button v-if="selectedSlot" :variant="'solid'" theme="gray" :label="t('Confirm')" @click="reschedule_booking.submit()" />
 			</div>
 		</template>
 	</Dialog>
@@ -504,44 +504,44 @@
 		v-model="open_services_sales_invoice"
 	>
 		<template #body-title>
-			<h3 class="text-lg font-semibold text-ink-gray-8"> Invoice Services</h3>
+			<h3 class="text-lg font-semibold text-ink-gray-8"> {{ t('Invoice Services') }}</h3>
 		</template>
 		<template #body-content>
 			<div class="flex gap-2 mb-4">
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Patient Name"
-						:disabled="true" label="Patient Name" v-model="patient_name" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient Name')"
+						:disabled="true" :label="t('Patient Name')" v-model="patient_name" />
 				</div>
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Patient ID"
-						:disabled="true" label="Patient ID" v-model="patient_id" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient ID')"
+						:disabled="true" :label="t('Patient ID')" v-model="patient_id" />
 				</div>
 			</div>
 			<div class="grid grid-cols-2 gap-2 py-1">
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="customer" :disabled="true" label="Customer" v-model="customer"
+						placeholder="customer" :disabled="true" :label="t('Customer')" v-model="customer"
 						:required="true" />
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="company"
-						:disabled="true" label="Company" v-model="company" :required="true" />
+						:disabled="true" :label="t('Company')" v-model="company" :required="true" />
 				</div>
 				<div class="py-1 w-full" v-if="show_advance">
 					<div class="sm items-center text-green-600">
-						Credit Balance: <span class="font-bold">{{ show_advance }}/-</span>
+						{{ t('Credit Balance: {0}', `${show_advance}/-`) }}
 					</div>
 				</div>
 				<div class="py-1 w-full" v-else></div>
 				<div class="py-2 w-full">
-					<Button label="Go To Sales Invoice" :link="null"
+					<Button :label="t('Go To Sales Invoice')" :link="null"
 						@click="goto_sales_invoices(patient_id)">
-						Go to Sales Invoice
+						{{ t('Go To Sales Invoice') }}
 					</Button>
 				</div>
 				<div class="py-1 w-full" v-if="show_advance">
-					<FormControl :type="'checkbox'" :ref_for="true" size="sm" variant="subtle" placeholder="Use Advance Amount"
-						label="Use Advance Amount" v-model="use_advance_amount" />
+					<FormControl :type="'checkbox'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Use Advance Amount')"
+						:label="t('Use Advance Amount')" v-model="use_advance_amount" />
 				</div>
 			</div>
 			<div class="pb-5">
@@ -554,8 +554,8 @@
 						showTooltip: true,
 						resizeColumn: true,
 						emptyState: {
-							title: 'No Data',
-							description: 'No data available',
+							title: t('No Data'),
+							description: t('No data available'),
 						},
 					}"
 					row-key="reference_name"
@@ -573,9 +573,9 @@
 						</ListRow>
 						<ListSelectBanner>
 							<template #actions="{ selections, unselectAll }">
-								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" label="Add Services" v-model="add_service" :link="null"
+								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" :label="t('Add Services')" v-model="add_service" :link="null"
 									@click="add_healthcare_services(selections)">
-									Add
+									{{ t('Add') }}
 								</Button>
 							</template>
 						</ListSelectBanner>
@@ -592,32 +592,32 @@
 			</div>
 			<div class="flex gap-4 mb-4">
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Total Quantity"
-						:disabled="true" label="Total Quantity" v-model="quantity" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Total Quantity')"
+						:disabled="true" :label="t('Total Quantity')" v-model="quantity" />
 				</div>
 				<div class="flex-1 w-auto">
 					<FormControl :type="'number'" :ref_for="true" size="sm" variant="subtle" :required="true"
-						placeholder="Total Amount" :disabled="true" label="Total Amount" v-model="amount" />
+						:placeholder="t('Total Amount')" :disabled="true" :label="t('Total Amount')" v-model="amount" />
 					<ErrorMessage v-if="errors.amount" :message="errors.amount"/>
 				</div>
 			</div>
 			<div class="grid grid-cols-3 gap-2 py-1" v-if="amount > 0">
 				<div class="py-1 w-full">
 					<FormControl type="autocomplete" :options="paymentOptions" size="sm" variant="subtle"
-						placeholder="Mode of Payment"label="Mode of Payment"
+						:placeholder="t('Mode of Payment')":label="t('Mode of Payment')"
 						v-model="si_payment_mode" />
 					<ErrorMessage v-if="errors.si_payment_mode" :message="errors.si_payment_mode"/>
 				</div>
 				<div class="py-1 w-full">
 					<FormControl :type="'number'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="Payable Amount" label="Payable Amount" v-model="payable_amount_service" :disabled="!payable_amount_service && !si_payment_mode" />
+						:placeholder="t('Payable Amount')" :label="t('Payable Amount')" v-model="payable_amount_service" :disabled="!payable_amount_service && !si_payment_mode" />
 					<ErrorMessage v-if="errors.payable_amount_service" :message="errors.payable_amount_service"/>
 				</div>
 				<div class="py-6 w-full">
-					<Button :ref_for="true" theme="gray" label="Add payment" :disabled="!payable_amount_service && !si_payment_mode"
+					<Button :ref_for="true" theme="gray" :label="t('Add payment')" :disabled="!payable_amount_service && !si_payment_mode"
 						@click="add_to_table(si_payment_mode, payable_amount_service, reference_date_service, reference_id_service)">
 						<div class="flex items-center truncate">
-							<Tooltip :text="'Add Payment'" placement="top">
+							<Tooltip :text="t('Add Payment')" placement="top">
 								<slot name="icon">
 									<FeatherIcon :name="'plus-square'"
 										class="size-4 text-ink-gray-7" />
@@ -630,17 +630,17 @@
 					<DatePicker
 						v-model="reference_date_service"
 						variant="subtle"
-						placeholder="Reference Date"
+						:placeholder="t('Reference Date')"
 						:disabled="!is_bank"
 						:required="is_bank"
-						label="Reference Date"
+						:label="t('Reference Date')"
 						:formatter="(date) => getFormat(date, '', true)"
 					/>
 					<ErrorMessage v-if="errors.reference_date_service" :message="errors.reference_date_service" />
 				</div>
 				<div class="py-1 w-full">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Reference ID"
-						:disabled="!is_bank" label="Reference Id" v-model="reference_id_service" :required="is_bank" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Reference ID')"
+						:disabled="!is_bank" :label="t('Reference Id')" v-model="reference_id_service" :required="is_bank" />
 					<ErrorMessage v-if="errors.reference_id_service" :message="errors.reference_id_service" />
 				</div>
 			</div>
@@ -672,9 +672,9 @@
 						</ListRow>
 						<ListSelectBanner>
 							<template #actions="{ selections, unselectAll }">
-								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" label="Remove Payments" :link="null"
+								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" :label="t('Remove Payments')" :link="null"
 									@click="remove_payments(selections)">
-									Remove
+									{{ t('Remove') }}
 								</Button>
 							</template>
 						</ListSelectBanner>
@@ -692,7 +692,7 @@
 			<div class="grid grid-cols-2 gap-2 py-2" v-if="amount > 0">
 				<div class="py-1 w-full">
 					<FormControl :type="'number'" :ref_for="true" size="sm" variant="subtle" :required="true"
-						placeholder="Total Payable Amount" :disabled="true" label="Total Payable Amount" v-model="total_payable_amount_service" />
+						:placeholder="t('Total Payable Amount')" :disabled="true" :label="t('Total Payable Amount')" v-model="total_payable_amount_service" />
 					<ErrorMessage v-if="errors.total_payable_amount_service" :message="errors.total_payable_amount_service"/>
 				</div>
 				<div class="py-1 w-full"></div>
@@ -704,7 +704,7 @@
 		<template #actions>
 			<div class="flex items-center space-x-4 p-2" v-if="total_payable_amount_service > 0">
 				<Button class="ml-2" :variant="'solid'" :ref_for="true" theme="gray" @click="create_service_invoice()" v-model="submit_payment">
-					Confirm to submit Invoice
+					{{ t('Confirm to submit Invoice') }}
 				</Button>
 			</div>
 		</template>
@@ -718,40 +718,40 @@
 		v-model="prescription_dialog"
 	>
 		<template #body-title>
-			<h3 class="text-lg font-semibold text-ink-gray-8">Invoice Prescriptions</h3>
+			<h3 class="text-lg font-semibold text-ink-gray-8">{{ t('Invoice Prescriptions') }}</h3>
 		</template>
 		<template #body-content>
 			<div class="flex gap-2 mb-4">
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Patient"
-						:disabled="true" label="Patient Name" v-model="patient_name" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient')"
+						:disabled="true" :label="t('Patient Name')" v-model="patient_name" />
 				</div>
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Patient ID"
-						:disabled="true" label="Patient ID" v-model="patient_id_pre" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient ID')"
+						:disabled="true" :label="t('Patient ID')" v-model="patient_id_pre" />
 				</div>
 			</div>
 			<div class="flex gap-2 mb-4">
 				<div class=" flex-1 w-auto">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						placeholder="customer" :disabled="true" label="Customer" v-model="customer"
+						placeholder="customer" :disabled="true" :label="t('Customer')" v-model="customer"
 						:required="true" />
 				</div>
 				<div class="flex-1 w-auto">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="company"
-						:disabled="true" label="Company" v-model="company" :required="true" />
+						:disabled="true" :label="t('Company')" v-model="company" :required="true" />
 				</div>
 			</div>
 			<div class="flex gap-2 mb-4">
 				<div class=" flex-1 w-auto">
 					<FormControl type="autocomplete" :options="encounteroptions" size="sm" variant="subtle"
-						placeholder="Patient Encounter" :disabled="false" label="Patient Encounter"
+						:placeholder="t('Patient Encounter')" :disabled="false" :label="t('Patient Encounter')"
 						v-model="encounter" :required="true" />
 				</div>
 				<div class="flex-1 w-auto pt-5">
-					<Button label="Go To Sales Invoice" :link="null"
+					<Button :label="t('Go To Sales Invoice')" :link="null"
 						@click="goto_sales_invoices(patient_id_pre)">
-						Go to Sales Invoice
+						{{ t('Go To Sales Invoice') }}
 					</Button>
 				</div>
 			</div>
@@ -765,8 +765,8 @@
 						showTooltip: true,
 						resizeColumn: true,
 						emptyState: {
-							title: 'No Data',
-							description: 'No data available',
+							title: t('No Data'),
+							description: t('No data available'),
 						},
 					}"
 					row-key="reference_name"
@@ -784,9 +784,9 @@
 						</ListRow>
 						<ListSelectBanner>
 							<template #actions="{ selections, unselectAll }">
-								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" label="Add Prescription" v-model="add_prescription" :link="null"
+								<Button :variant="'solid'" :ref_for="true" theme="gray" size="sm" :label="t('Add Prescription')" v-model="add_prescription" :link="null"
 									@click="add_selected_prescriptions(selections)">
-									Add
+									{{ t('Add') }}
 								</Button>
 							</template>
 						</ListSelectBanner>
@@ -803,19 +803,19 @@
 			</div>
 			<div class="flex gap-4 mb-4">
 				<div class="flex-1 w-auto">
-					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" placeholder="Total Quantity"
-						:disabled="true" label="Total Quantity" v-model="quantity_pre" />
+					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Total Quantity')"
+						:disabled="true" :label="t('Total Quantity')" v-model="quantity_pre" />
 				</div>
 				<div class="flex-1 w-auto">
 					<FormControl :type="'number'" :ref_for="true" size="sm" variant="subtle" :required="true"
-						placeholder="Total Amount" :disabled="true" label="Total Amount" v-model="amount_pre" />
+						:placeholder="t('Total Amount')" :disabled="true" :label="t('Total Amount')" v-model="amount_pre" />
 						<ErrorMessage v-if="errors.amount_pre" :message="errors.amount_pre"/>
 				</div>
 			</div>
 			<div class="flex gap-4 mb-4">
 				<div class="flex-1 w-auto">
 					<FormControl type="autocomplete" :options="paymentOptions" size="sm" variant="subtle"
-						placeholder="Mode of Payment" :disabled="false" label="Mode of Payment"
+						:placeholder="t('Mode of Payment')" :disabled="false" :label="t('Mode of Payment')"
 						v-model="pre_payment_mode" :required="true" />
 						<ErrorMessage v-if="errors.pre_payment_mode" :message="errors.pre_payment_mode"/>
 				</div>
@@ -825,7 +825,7 @@
 		<template #actions>
 			<div class="flex items-center space-x-4 p-2">
 				<Button class="ml-2" :variant="'solid'" :ref_for="true" theme="gray" @click="create_prescription_invoice()" v-model="submit_payment">
-					Confirm to submit Invoice
+					{{ t('Confirm to submit Invoice') }}
 				</Button>
 			</div>
 		</template>
@@ -833,7 +833,7 @@
 
 	<Dialog
 		:options="{
-			title: 'Invoice Created',
+			title: t('Invoice Created'),
 			message: si_message,
 			size: 'xl',
 			icon: {
@@ -845,11 +845,11 @@
 		<template #actions>
 			<div class="space-x-2">
 				<Button variant="solid" @click="sales_invoice_creation_dialog = false">
-					Ok
+					{{ t('OK') }}
 				</Button>
 				<Button v-if="sales_invoice_ref" :ref_for="true" theme="gray" size="md"
 					label="print_si" :disabled="false" @click="print_sales_invoice(sales_invoice_ref)">
-					<Tooltip :text="'Print'" placement="top">
+					<Tooltip :text="t('Print')" placement="top">
 						<slot name="icon">
 							<FeatherIcon :name="'printer'"
 								class="size-4 text-ink-gray-7" />
@@ -862,6 +862,7 @@
 </template>
 
 <script setup>
+	import { appointmentDeskTranslation as t } from '@/translation'
 	import { ref, watch } from "vue";
 	import {
 		createResource,
@@ -922,7 +923,7 @@
 	let show_advance = ref(false);
 	let pre_payment_mode = ref(false);
 
-	let vital_update_button = ref("Update");
+	let vital_update_button = ref(t('Update'));
 	let reference_date_service = ref(new Date().toISOString().split('T')[0]);
 
 	let dialog_message = ref("");
@@ -976,56 +977,56 @@
 
 	let columns = ref([
 		{
-			label: "Patient Details",
+			label: t('Patient Details'),
 			key: "patient_details",
 			icon: "user",
 			width: "250px",
 			align: "left",
 		},
 		{
-			label: "Practitioner Details",
+			label: t('Practitioner Details'),
 			key: "practitioner_details",
 			icon: "user",
 			width: "200px",
 			align: "left",
 		},
 		{
-			label: "Appointment Details",
+			label: t('Appointment Details'),
 			key: "appointment_details",
 			icon: "user",
 			width: "220px",
 			align: "left",
 		},
 		{
-			label: "Time",
+			label: t('Time'),
 			key: "appointment_time_",
 			icon: "clock",
 			width: "160px",
 			align: "center",
 		},
 		{
-			label: "Token No",
+			label: t('Token No'),
 			key: "patient_token_number",
 			icon: "log-in",
 			width: "180px",
 			align: "center",
 		},
 		{
-			label: "Status",
+			label: t('Status'),
 			key: "status",
 			icon: "check-circle",
 			width: "180px",
 			align: "center",
 		},
 		{
-			label: "Actions",
+			label: t('Actions'),
 			key: "actions",
 			icon: "chevrons-right",
 			width: "300px",
 			align: "center",
 		},
 		{
-			label: "Patient Balance",
+			label: t('Patient Balance'),
 			key: "patient_balance",
 			icon: "dollar-sign",
 			width: "150px",
@@ -1035,31 +1036,31 @@
 
 	const columns_service = ref([
 		{
-			label: 'Service',
+			label: t('Service'),
 			key: 'service',
 		},
 		{
-			label: 'Reference Type',
+			label: t('Reference Type'),
 			key: 'reference_type',
 			width: '170px'
 		},
 		{
-			label: 'Posting Date',
+			label: t('Posting Date'),
 			key: 'posting_date',
 			width: '120px'
 		},
 		{
-			label:'Qty',
+			label: t('Qty'),
 			key: 'qty',
 			width: '100px'
 		},
 		{
-			label: 'Price',
+			label: t('Price'),
 			key: 'rate',
 			width: '110px',
 		},
 		{
-			label: 'Reference name',
+			label: t('Reference name'),
 			key: 'reference_name',
 			width: '200px'
 		},
@@ -1067,12 +1068,12 @@
 
 	const columns_payments = ref([
 		{
-			label: 'Mode of Payment',
+			label: t('Mode of Payment'),
 			key: 'mode_of_payment',
 			icon: "credit-card",
 		},
 		{
-			label: 'Amount',
+			label: t('Amount'),
 			key: 'amount',
 			icon: "dollar-sign",
 		},
@@ -1081,27 +1082,27 @@
 
 	const columns_prescriptions = ref([
 		{
-			label: 'Drug code',
+			label: t('Drug code'),
 			key: 'drug_code',
 			width: '200px',
 		},
 		{
-			label: 'Quantity',
+			label: t('Quantity'),
 			key: 'quantity',
 			width: '200px',
 		},
 		{
-			label: 'Price',
+			label: t('Price'),
 			key: 'rate',
 			width: '110px',
 		},
 		{
-			label: 'Posting Date',
+			label: t('Posting Date'),
 			key: 'posting_date',
 			width: '120px'
 		},
 		{
-			label: 'Description',
+			label: t('Description'),
 			key: 'description',
 			width: '200px',
 		},
@@ -1157,18 +1158,18 @@
 			onSuccess(response) {
 				if (response["message"]) {
 					dialog_message = `${response["message"]}`;
-					dialog_title = "Success";
+					dialog_title = t('Success');
 					success_dialog.value = true;
 				} else if (response["alert"]) {
 					dialog_message = response["alert"];
-					dialog_title = "Checkin Failed";
+					dialog_title = t('Checkin Failed');
 					alert_dialog.value = true;
 				}
 				reload_waitlist();
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to set status";
+				dialog_title = t('Failed to set status');
 				alert_dialog.value = true;
 			}
 		});
@@ -1204,15 +1205,15 @@
 					}
 
 					if (response.is_new) {
-						vital_update_button.value = "Create";
+						vital_update_button.value = t('Create');
 					} else {
-						vital_update_button.value = "Update";
+						vital_update_button.value = t('Update');
 					}
 				}
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to load vital signs";
+				dialog_title = t('Failed to load vital signs');
 				alert_dialog.value = true;
 			}
 		});
@@ -1245,13 +1246,13 @@
 				reload_waitlist();
 			} else if (response.status == "Error") {
 				dialog_message = response.message;
-				dialog_title = "Failed to create vital signs";
+				dialog_title = t('Failed to create vital signs');
 				alert_dialog.value = true;
 			}
 		},
 		onError(error) {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Failed to create vital signs";
+			dialog_title = t('Failed to create vital signs');
 			alert_dialog.value = true;
 		},
 	});
@@ -1277,19 +1278,19 @@
 			createVitalsDialog.value = false;
 			if (response && response["status"] == "Error") {
 				dialog_message = response["message"];
-				dialog_title = "Failed to submit vital signs";
+				dialog_title = t('Failed to submit vital signs');
 				alert_dialog.value = true;
 
 			} else {
 				dialog_message = response["message"];
-				dialog_title = "Vitals submitted";
+				dialog_title = t('Vitals submitted');
 				success_dialog.value = true;
 			}
 			reload_waitlist();
 		},
 		onError(error) {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Failed to submit vital signs";
+			dialog_title = t('Failed to submit vital signs');
 			alert_dialog.value = true;
 		}
 	});
@@ -1304,8 +1305,8 @@
 			reschedule_practitioner_id.value = row.practitioner;
 			patient_name_reschedule.value = row.patient;
 		} else {
-			dialog_title = "Warning";
-			dialog_message = `You can't reschedule already ${row.status} appointment`
+			dialog_title = t('Warning');
+			dialog_message = t("You can't reschedule already {0} appointment", t(row.status))
 			alert_dialog.value = true;
 		}
 	};
@@ -1365,8 +1366,8 @@
 			};
 		},
 		onSuccess(response) {
-			dialog_message = "Appointment Rescheduled Successfully";
-			dialog_title = "Appointment Reschedulled";
+			dialog_message = t('Appointment Rescheduled Successfully');
+			dialog_title = t('Appointment Reschedulled');
 			success_dialog.value = true;
 			reschedule_date.value = null;
 			newid.value = '';
@@ -1380,12 +1381,12 @@
 		onError(error) {
 			if (error) {
 				if (error.message.includes("OverlapError")) {
-					dialog_message = "Selected patient already have an appointment for that day. Please choose another time slot";
-					dialog_title = "Appointment Reschedulling Failed";
+					dialog_message = t('Selected patient already have an appointment for that day. Please choose another time slot');
+					dialog_title = t('Appointment Reschedulling Failed');
 					alert_dialog.value = true;
 				} else {
 					dialog_message = error;
-					dialog_title = "Appointment Reschedulling Failed";
+					dialog_title = t('Appointment Reschedulling Failed');
 					alert_dialog.value = true;
 				}
 				scheduleDialog.value = false;
@@ -1414,7 +1415,7 @@
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to fetch Service Details";
+				dialog_title = t('Failed to fetch Service Details');
 				alert_dialog.value = true;
 			}
 		});
@@ -1437,7 +1438,7 @@
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to fetch healthcare services";
+				dialog_title = t('Failed to fetch healthcare services');
 				alert_dialog.value = true;
 			}
 		});
@@ -1518,13 +1519,13 @@
 				if (response) {
 					reload_waitlist();
 					sales_invoice_ref = response;
-					si_message = `Sales invoice has been created for patient id ${patient_id.value}`;
+					si_message = t('Sales invoice has been created for patient id {0}', patient_id.value);
 					sales_invoice_creation_dialog.value = true;
 				}
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to create sales invoice";
+				dialog_title = t('Failed to create sales invoice');
 				alert_dialog.value = true;
 			},
 		});
@@ -1553,7 +1554,7 @@
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to fetch Prescription Details";
+				dialog_title = t('Failed to fetch Prescription Details');
 				alert_dialog.value = true;
 			}
 		});
@@ -1580,7 +1581,7 @@
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to fetch prescriptions";
+				dialog_title = t('Failed to fetch prescriptions');
 				alert_dialog.value = true;
 			}
 		});
@@ -1634,22 +1635,22 @@
 					prescription_dialog.value = false;
 					reload_waitlist();
 					sales_invoice_ref = response;
-					si_message = `Sales invoice has been created for patient id ${patient_id_pre.value}`;
+					si_message = t('Sales invoice has been created for patient id {0}', patient_id_pre.value);
 					sales_invoice_creation_dialog.value = true;
 				}
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Failed to create sales invoice";
+				dialog_title = t('Failed to create sales invoice');
 				alert_dialog.value = true;
 			},
 		});
 		if (!pre_payment_mode.value || amount_pre.value == 0) {
 			if (!pre_payment_mode.value) {
-				errors.value.pre_payment_mode = "This field is required.";
+				errors.value.pre_payment_mode = t('This field is required.');
 			}
 			if (amount_pre.value == 0) {
-				errors.value.amount_pre = "Please select and add prescriptions from table";
+				errors.value.amount_pre = t('Please select and add prescriptions from table');
 			}
 		} else {
 			create_prescription_invoice_.fetch();
@@ -1665,7 +1666,7 @@
 		},
 		onError(error) {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Failed to get mode of payments";
+			dialog_title = t('Failed to get mode of payments');
 			alert_dialog.value = true;
 		}
 	});
@@ -1719,19 +1720,19 @@
 
 					if (!w) {
 						error_dialog.value = true;
-						dialog_title = "Please enable pop-ups";
-						dialog_message = "Please enable pop-ups of your browser to print boarding pass";
+						dialog_title = t('Please enable pop-ups');
+						dialog_message = t('Please enable pop-ups of your browser to print boarding pass');
 						return;
 					}
 				} else {
 					error_dialog.value = true;
-					dialog_title = "Configure Boarding Pass Print Format";
-					dialog_message = "Please configure default boarding pass print format in Healthcare Settings";
+					dialog_title = t('Configure Boarding Pass Print Format');
+					dialog_message = t('Please configure default boarding pass print format in Healthcare Settings');
 				}
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Boarding Pass Printing Failed";
+				dialog_title = t('Boarding Pass Printing Failed');
 				error_dialog.value = true;
 			},
 		});
@@ -1743,23 +1744,23 @@
 		errors.value = {};
 
 		if (parseFloat(total_payable_amount_service.value) == parseFloat(amount.value)) {
-			errors.value.payable_amount_service = "You are already added full amount";
+			errors.value.payable_amount_service = t('You are already added full amount');
 			return
 		}
 
 		if (parseFloat(payable_amount_service.value) > parseFloat(amount.value)) {
-			errors.value.payable_amount_service = `Please add an amount less than ${amount.value}`;
+			errors.value.payable_amount_service = t('Please add an amount less than {0}', amount.value);
 			return
 		}
 
 		if (!payment_mode) {
-			errors.value.si_payment_mode = "This field is required.";
+			errors.value.si_payment_mode = t('This field is required.');
 			isValid = false;
 		} else {
 			errors.value.si_payment_mode = "";
 		}
 		if (!payable_amount) {
-			errors.value.payable_amount_service = "This field is required.";
+			errors.value.payable_amount_service = t('This field is required.');
 			isValid = false;
 		} else {
 			errors.value.payable_amount_service = "";
@@ -1767,13 +1768,13 @@
 
 		if (is_bank.value) {
 			if (!ref_date) {
-				errors.value.reference_date_service = "This field is required.";
+				errors.value.reference_date_service = t('This field is required.');
 				isValid = false;
 			} else {
 				errors.value.reference_date_service = "";
 			}
 			if (!ref_id) {
-				errors.value.reference_id_service = "This field is required.";
+				errors.value.reference_id_service = t('This field is required.');
 				isValid = false;
 			} else {
 				errors.value.reference_id_service = "";
@@ -1816,7 +1817,7 @@
 				total_payable_amount_service.value = total
 			}
 		} else {
-			errors.value.services_error = "Need payment mode and amount to process"
+			errors.value.services_error = t('Need payment mode and amount to process')
 		}
 	};
 
@@ -1890,7 +1891,7 @@
 			},
 			onError(error) {
 				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Type fetching failed";
+				dialog_title = t('Type fetching failed');
 				error_dialog.value = true;
 			}
 		});

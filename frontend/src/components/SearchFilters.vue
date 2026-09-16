@@ -4,7 +4,7 @@
 			<Autocomplete
 				v-model="search"
 				:options="searchOptions"
-				placeholder="Appointment"
+				:placeholder="t('Appointment')"
 				size="lg"
 				variant="subtle"
 				@update:v-model="(val) => emit('update:search', val)"
@@ -14,7 +14,7 @@
 			<Autocomplete
 				v-model="patientSearch"
 				:options="patientSearchOptions"
-				placeholder="Patient"
+				:placeholder="t('Patient')"
 				size="lg"
 				variant="subtle"
 				@update:v-model="(val) => emit('update:patient_search', val)"
@@ -32,7 +32,7 @@
 		<div class="w-1/5 py-2">
 			<FormControl
 				type="number"
-				placeholder="Mobile Number"
+				:placeholder="t('Mobile Number')"
 				size="sm"
 				variant="subtle"
 				v-model="mobileSearch"
@@ -43,7 +43,7 @@
 			<Autocomplete
 				v-model="department"
 				:options="departmentOptions"
-				placeholder="Department"
+				:placeholder="t('Department')"
 				size="lg"
 				variant="subtle"
 				@update:v-model="(val) => emit('update:department', val)"
@@ -53,7 +53,7 @@
 			<DatePicker
 				v-model="dateValue"
 				variant="subtle"
-				placeholder="Date"
+				:placeholder="t('Date')"
 				:disabled="false"
 				:formatter="(date) => getFormat(date, '', true)"
 				@update:v-model="(val) => emit('update:dateValue', val)"
@@ -63,7 +63,7 @@
 			<Autocomplete
 				:options=practitionerOptions
 				v-model="practitioner"
-				placeholder="Practitioners"
+				:placeholder="t('Practitioners')"
 				:multiple="true"
 				@update:v-model="(val) => emit('update:practitioner', val)"
 			>
@@ -81,7 +81,7 @@
 			<Autocomplete
 				:options=visitypeOptions
 				v-model="visitType"
-				placeholder="Visit type"
+				:placeholder="t('Visit type')"
 				size="sm"
 				@update:v-model="(val) => emit('update:visitType', val)"
 			/>
@@ -89,17 +89,17 @@
 		<div class="w-1/5 py-2">
 			<FormControl
 				type="select"
-				:options="[{ label: 'Appointment Time', value: 'Appointment Time' }, { label: 'Checkin Time', value: 'Checkin Time' }]"
+				:options="[{ label: t('Appointment Time'), value: 'Appointment Time' }, { label: t('Checkin Time'), value: 'Checkin Time' }]"
 				:size="'sm'"
-				placeholder="Sort By"
+				:placeholder="t('Sort By')"
 				v-model="sort_by"
 				@update:v-model="(val) => emit('update:sort_by', val)"
 			/>
 		</div>
 		<div class="py-2">
-			<Button :ref_for="true" theme="gray" size="sm" label="Clear Filters" :disabled="false" @click="clear_filters()">
+			<Button :ref_for="true" theme="gray" size="sm" :label="t('Clear Filters')" :disabled="false" @click="clear_filters()">
 				<div class="flex items-center truncate">
-					<Tooltip :text="'Clear Filter'" placement="top">
+					<Tooltip :text="t('Clear Filter')" placement="top">
 						<slot name="icon">
 							<FeatherIcon :name="'x'"
 								class="size-4 text-ink-gray-7" />
@@ -112,6 +112,7 @@
 </template>
 
 <script setup>
+	import { appointmentDeskTranslation as t } from '@/translation'
 	import { getFormat } from '@/utils'
 	defineProps({
 		searchOptions: Array,
@@ -154,7 +155,7 @@
 		},
 		onError: (error) => {
 			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Fetching Masters Failed";
+			dialog_title = t('Fetching Masters Failed');
 			error_dialog.value = true;
 		},
 	});

@@ -51,7 +51,7 @@
     </div>
     <div class="m-2 flex flex-col gap-1">
       <SidebarLink
-        :label="isSidebarCollapsed ? 'Expand' : 'Collapse'"
+        :label="isSidebarCollapsed ? t('Expand') : t('Collapse')"
         :isCollapsed="isSidebarCollapsed"
         @click="isSidebarCollapsed = !isSidebarCollapsed"
         class=""
@@ -70,6 +70,7 @@
 </template>
 
 <script setup>
+	import { appointmentDeskTranslation as t } from '@/translation'
 import LucideLayoutDashboard from '~icons/lucide/layout-dashboard'
 import Section from '@/components/Section.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
@@ -94,7 +95,7 @@ const allViews = computed(() => {
     //   to: 'Dashboard'
     // },
     {
-      label: 'Appointment Desk',
+      label: t('Appointment Desk'),
       icon: AppointmentDeskIcon,
       to: 'Waitlist',
     },
@@ -104,17 +105,17 @@ const allViews = computed(() => {
     //   to: 'practitioner_screen',
     // },
     {
-      label: 'Bed Management',
+      label: t('Bed Management'),
       icon: BedManagementIcon,
       to: 'bed_management',
     },
     {
-      label: 'Queue',
+      label: t('Queue'),
       icon: MonitorIcon,
       to: 'QueueSelection',
     },
     {
-      label: 'Patient Self Service',
+      label: t('Patient Self Service'),
       icon: KioskIcon,
       to: 'Kiosk',
     },

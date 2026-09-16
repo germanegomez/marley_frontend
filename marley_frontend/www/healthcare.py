@@ -2,6 +2,7 @@
 # GNU GPLv3 License. See license.txt
 
 import frappe
+from frappe.translate import get_all_translations
 from frappe.utils import cint, get_system_timezone
 from frappe.utils.telemetry import capture
 
@@ -24,10 +25,17 @@ def get_context_for_dev():
 	return get_boot()
 
 
+@frappe.whitelist(allow_guest=True)
+def get_translations():
+	"""Return the effective Frappe dictionary used by the Vue frontend."""
+	return get_all_translations(frappe.local.lang or "en")
+
+
 def get_boot():
 	return frappe._dict(
 		{
 			"frappe_version": frappe.__version__,
+			"language": frappe.local.lang or "en",
 			"default_route": get_default_route(),
 			"site_name": frappe.local.site,
 			"read_only_mode": frappe.flags.read_only,

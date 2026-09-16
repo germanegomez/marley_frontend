@@ -23,7 +23,7 @@
           <div
             class="text-base font-medium leading-none text-ink-gray-9 truncate"
           >
-            {{ brand.name || 'Healthcare' }}
+            {{ brand.name || t('Healthcare') }}
           </div>
           <div class="mt-1 text-sm leading-none text-ink-gray-7 truncate">
             {{ user.full_name }}
@@ -50,6 +50,7 @@
 </template>
 
 <script setup>
+import { appointmentDeskTranslation as t } from '@/translation'
 import BrandLogo from '@/components/BrandLogo.vue'
 import Apps from '@/components/Apps.vue'
 import { session } from '@/data/session'
@@ -118,7 +119,7 @@ function dropdownItemObj(item) {
 
   return {
     icon: _item.icon,
-    label: _item.label,
+    label: t(_item.label),
     onClick: () =>
       window.open(_item.route, _item.open_in_new_window ? '_blank' : ''),
   }
@@ -133,19 +134,19 @@ function getStandardItem(item) {
     case 'toggle_theme':
       return {
         icon: theme.value === 'dark' ? 'sun' : item.icon,
-        label: item.label,
+        label: t(item.label),
         onClick: toggleTheme,
       }
     case 'about':
       return {
         icon: item.icon,
-        label: item.label,
+        label: t(item.label),
         onClick: () => (showAboutModal.value = true),
       }
     case 'logout':
       return {
         icon: item.icon,
-        label: item.label,
+        label: t(item.label),
         onClick: () => logout.submit(),
       }
   }
