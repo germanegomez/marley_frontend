@@ -13,27 +13,27 @@
 			<div class="absolute top-4 left-4">
 				<Breadcrumbs :items="[
 					{
-						label: 'Home',
+						label: t('Home', selectedLanguage),
 						route: {
 							name: 'Kiosk',
 						},
 					},
 					{
-						label: 'Confirm Booking',
+						label: t('Confirm Booking', selectedLanguage),
 						route: '/Booking_confirmation?appointment='+ appointment_id,
 					},
 				]" />
 			</div>
 			<!-- Content inside the white box -->
-			<img src="/src/assets/bookingconfirm.jpg" alt="Welcome Image" />
+			<img src="/src/assets/bookingconfirm.jpg" :alt="t('Welcome Image', selectedLanguage)" />
 			<div v-if="appointment_id">
 				<p class="text-center text-md text-ink-gray-8">
-					{{ translations[selectedLanguage].have_appointment }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'have_appointment') }}
 				</p>
 			</div>
 			<div v-else>
 				<p class="text-center text-md text-ink-gray-8">
-					{{ translations[selectedLanguage].no_appointment }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'no_appointment') }}
 				</p>
 			</div>
 			<div class="flex space-x-4 py-4">
@@ -45,11 +45,11 @@
 					theme="gray"
 					size="lg"
 				>
-					{{ translations[selectedLanguage].book }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'book') }}
 				</Button>
 			</div>
 		</div>
-		<Footer />
+		<Footer :language="selectedLanguage" />
 	</div>
 
 	<Dialog :options="{
@@ -62,7 +62,7 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK', selectedLanguage),
 				variant: 'solid',
 				onClick: () => {
 					route_to_home();
@@ -81,7 +81,7 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK', selectedLanguage),
 				variant: 'solid',
 			},
 		],
@@ -89,7 +89,7 @@
 
 	<Dialog v-model="dialogAppointment">
 		<template #body-title>
-			<h3>Select your Appointment</h3>
+			<h3>{{ t('Select your Appointment', selectedLanguage) }}</h3>
 		</template>
 		<template #body-content>
 			<div v-if="appointmentList.length > 0">
@@ -99,21 +99,21 @@
 						:class="{ 'bg-gray-200': selectedAppointment === app.name }" @click="selectAppointment(app.name)">
 						<div>
 							<strong>{{ app.practitioner_name }}</strong>
-							<p class="text-sm text-gray-600">ID: {{ app.name }} Time: {{ app.appointment_time }}</p>
+							<p class="text-sm text-gray-600">{{ t('ID', selectedLanguage) }}: {{ app.name }} {{ t('Time', selectedLanguage) }}: {{ app.appointment_time }}</p>
 						</div>
 					</li>
 				</ul>
 			</div>
 			<div v-else>
-				<p>No Appointments found.</p>
+				<p>{{ t('No Appointments found.', selectedLanguage) }}</p>
 			</div>
 		</template>
 		<template #actions>
 			<Button variant="solid" :disabled="!selectedAppointment" @click="confirmSelection">
-				Confirm
+				{{ t('Confirm', selectedLanguage) }}
 			</Button>
 			<Button class="ml-2" @click="dialogAppointment = false">
-				Close
+				{{ t('Close', selectedLanguage) }}
 			</Button>
 		</template>
 	</Dialog>
@@ -125,6 +125,7 @@
 	import { createResource, Dialog, Breadcrumbs } from "frappe-ui";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
+	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation';
 
 	// Define translations
 	const translations = {
@@ -204,22 +205,22 @@
 		},
 		onSuccess(response) {
 			if (response["message"]) {
-				dialog_message = `${response["message"]}`;
-				dialog_title = "Message";
+				dialog_message.value = `${response["message"]}`;
+				dialog_title.value = t("Message", selectedLanguage.value);
 				success_dialog.value = true;
 			} else if (response["alert"]) {
-				dialog_message = response["alert"];
-				dialog_title = "Alert";
+				dialog_message.value = response["alert"];
+				dialog_title.value = t("Alert", selectedLanguage.value);
 				alert_dialog.value = true;
 			} else if (response["route"]) {
-				dialog_message = response["payment_message"];
-				dialog_title = "Complete Payment";
+				dialog_message.value = response["payment_message"];
+				dialog_title.value = t("Complete Payment", selectedLanguage.value);
 				success_dialog.value = true;
 			}
 		},
 		onError(error) {
-			dialog_message = `APIError: ${error.message}`;
-			dialog_title = "Error";
+			dialog_message.value = t("APIError: {0}", selectedLanguage.value, error.message);
+			dialog_title.value = t("Error", selectedLanguage.value);
 			alert_dialog.value = true;
 		}
 	});

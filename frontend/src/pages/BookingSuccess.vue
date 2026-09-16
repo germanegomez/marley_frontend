@@ -11,31 +11,31 @@
 			<div class="absolute top-4 left-4">
 				<Breadcrumbs :items="[
 					{
-						label: 'Home',
+						label: t('Home', selectedLanguage),
 						route: {
 							name: 'Kiosk',
 						},
 					},
 					{
-						label: 'Book Appointment',
+						label: t('Book Appointment', selectedLanguage),
 						route: '/Appointment',
 					},
 					{
-						label: 'Success',
+						label: t('Success', selectedLanguage),
 						route: '/BookingSuccess',
 					},
 				]"
 				/>
 			</div>
 			<!-- Success Icon/Image -->
-			<img src="/src/assets/Success.png" alt="Success Icon" class="h-24 w-24 object-contain" />
+			<img src="/src/assets/Success.png" :alt="t('Success Icon', selectedLanguage)" class="h-24 w-24 object-contain" />
 
 			<!-- Success Message -->
 			<p class="text-2xl font-bold text-center text-ink-gray-8">
-				{{ translations[selectedLanguage].appointmentBooked }}
+				{{ kioskCatalogMessage(translations, selectedLanguage, 'appointmentBooked') }}
 			</p>
 			<p class="text-sm text-gray-600 text-center text-ink-gray-8">
-				{{ translations[selectedLanguage].appointmentBookedMessage }}
+				{{ kioskCatalogMessage(translations, selectedLanguage, 'appointmentBookedMessage') }}
 			</p>
 
 			<!-- Action Buttons -->
@@ -47,7 +47,7 @@
 					theme="gray"
 					size="lg"
 				>
-					{{ translations[selectedLanguage].book }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'book') }}
 				</Button>
 				<Button
 					@click="goToHome"
@@ -56,11 +56,11 @@
 					theme="gray"
 					size="lg"
 				>
-					{{ translations[selectedLanguage].leave }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'leave') }}
 				</Button>
 			</div>
 		</div>
-		<Footer />
+		<Footer :language="selectedLanguage" />
 	</div>
 </template>
 
@@ -71,6 +71,7 @@
 	import { ref } from "vue";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
+	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation';
 
 	const router = useRouter();
 

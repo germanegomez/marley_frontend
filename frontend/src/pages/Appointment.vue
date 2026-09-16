@@ -21,33 +21,33 @@
 					<!-- Breadcrumbs -->
 					<div class="absolute top-4 left-4">
 						<Breadcrumbs :items="[
-							{ label: 'Home', route: { name: 'Kiosk' }},
-							{ label: 'Confirm Booking', route: '/Booking_confirmation' },
-							{ label: 'Book Appointment', route: '/Appointment' },
+							{ label: t('Home', selectedLanguage), route: { name: 'Kiosk' }},
+							{ label: t('Confirm Booking', selectedLanguage), route: '/Booking_confirmation' },
+							{ label: t('Book Appointment', selectedLanguage), route: '/Appointment' },
 						]"
 						class="flex flex-wrap items-center text-sm text-gray-600 space-x-1 sm:space-x-2 overflow-x-auto whitespace-nowrap"/>
 					</div>
 
 					<div class="text-xl font-bold text-center py-4 text-ink-gray-8">
-						Hello {{ patient }}!
+						{{ t('Hello {0}!', selectedLanguage, patient) }}
 					</div>
 
 					<h1 class="text-3xl font-bold text-center mb-8 text-ink-gray-8">
-						{{ translations.newAppointment[selectedLanguage] }}
+						{{ kioskCatalogMessage(translations, selectedLanguage, 'newAppointment') }}
 					</h1>
 
 					<div class="space-y-6 sm:space-y-4 px-2 py-15 sm:px-6">
 						<FormControl type="autocomplete" :options="departmentOptions" v-model="department"
-							:label="translations.selectDepartment[selectedLanguage]" size="md" />
+							:label="kioskCatalogMessage(translations, selectedLanguage, 'selectDepartment')" size="md" />
 						<FormControl type="autocomplete" :options="practitionerOptions" v-model="practitioner"
-							:label="translations.selectPractitioner[selectedLanguage]" :required="true" size="md" />
+							:label="kioskCatalogMessage(translations, selectedLanguage, 'selectPractitioner')" :required="true" size="md" />
 						<DatePicker
 							v-model="appointment_date"
 							variant="subtle"
-							:placeholder=translations.pickDate[selectedLanguage]
+							:placeholder="kioskCatalogMessage(translations, selectedLanguage, 'pickDate')"
 							:disabled="false"
 							:required="true"
-							:label=translations.pickDate[selectedLanguage]
+							:label="kioskCatalogMessage(translations, selectedLanguage, 'pickDate')"
 							:formatter="(date) => getFormat(date, '', true)"
 						/>
 					</div>
@@ -56,13 +56,13 @@
 					:class="'bg-surface-white p-6 rounded-2xl shadow-xl border flex flex-col justify-center w-full min-w-[400px] max-w-[800px] mx-auto h-[600px]'"
 				>
 					<h2 class="text-3xl font-bold text-center mb-4 pb-10 text-ink-gray-8">
-						{{ translations.choose_a_slot[selectedLanguage] }}
+						{{ kioskCatalogMessage(translations, selectedLanguage, 'choose_a_slot') }}
 					</h2>
 
 					<div v-if="isLoadingSlots" class="flex justify-center items-center h-48">
 						<div class="spinner-border animate-spin inline-block w-12 h-12 border-4 rounded-full"
 							style="border-top-color: black;" role="status">
-							<span class="sr-only text-ink-gray-8">Loading...</span>
+							<span class="sr-only text-ink-gray-8">{{ t('Loading...', selectedLanguage) }}</span>
 						</div>
 					</div>
 
@@ -79,7 +79,7 @@
 					</div>
 
 					<p v-else class="text-gray-500 font-semibold text-lg text-center">
-						{{ translations.no_available_slots[selectedLanguage] }}
+						{{ kioskCatalogMessage(translations, selectedLanguage, 'no_available_slots') }}
 					</p>
 
 					<div class="flex justify-center pt-10">
@@ -92,17 +92,17 @@
 							theme="gray"
 							size="lg"
 						>
-							{{ translations.confirm_booking[selectedLanguage] }}
+							{{ kioskCatalogMessage(translations, selectedLanguage, 'confirm_booking') }}
 						</Button>
 					</div>
 				</div>
 			</div>
 		</div>
-		<Footer />
+		<Footer :language="selectedLanguage" />
 	</div>
 
 	<Dialog :options="{
-		title: dialog_title || 'Error',
+		title: dialog_title || t('Error', selectedLanguage),
 		message: `${dialog_message}`,
 		size: 'xl',
 		icon: {
@@ -111,15 +111,16 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK', selectedLanguage),
 				variant: 'solid',
 			},
 		],
-	}" v-model="dialog" @click="dialog.value = false" />
+	}" v-model="dialog" @click="dialog = false" />
 
 	<!-- patient profile completeion before booking -->
 	<CompleteProfileDialog
 		v-model="complete_profile_dialog"
+		:language="selectedLanguage"
 		:form_firstName="form_firstName"
 		:onUpdate:form_firstName="val => form_firstName = val"
 		:form_lastName="form_lastName"
@@ -143,20 +144,21 @@
 		:form_zip="form_zip"
 		:onUpdate:form_zip="val => form_zip = val"
 		:errors="errors"
-		:genderOptions="genderOptions"
+		:genderOptions="translatedGenderOptions"
 		@confirm="handleConfirm"
 	/>
 </template>
 
 
 <script setup>
-	import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+	import { computed, ref, watch, onMounted, onBeforeUnmount } from "vue";
 	import { createResource, Breadcrumbs, Dialog, FormControl, ErrorMessage, DatePicker } from "frappe-ui";
 	import { useRouter } from "vue-router";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
 	import CompleteProfileDialog from '@/components/CompleteProfileDialog.vue';
 	import { getFormat } from '@/utils'
+	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	const router = useRouter();
 	let selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
@@ -229,6 +231,12 @@
 	let form_state = ref("");
 	let form_zip = ref("");
 	let genderOptions = ref([]);
+	const translatedGenderOptions = computed(() =>
+		genderOptions.value.map(option => ({
+			...option,
+			label: t(option.label, selectedLanguage.value),
+		}))
+	);
 	let errors = ref({});
 
 	let slots = ref([]);
@@ -275,7 +283,7 @@
 		if (newDate && new Date(newDate) < today) {
 			// If the selected date is in the past, clear the date
 			appointment_date.value = null;
-			dialog_message = "Past dates are not allowed. Please select a valid date."
+			dialog_message.value = t("Past dates are not allowed. Please select a valid date.", selectedLanguage.value)
 			dialog.value = true;
 		}
 		fetchSlots();
@@ -297,9 +305,9 @@
 			defAppType.value = response["defAppType"]
 		},
 		onError: (error) => {
-			dialog_message = "Failed to load data. Please contact the System Manager.";
+			dialog_message.value = t("Failed to load data. Please contact the System Manager.", selectedLanguage.value);
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\nError:${error.message}`
+			error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`
 			error_log.submit()
 		},
 	});
@@ -326,9 +334,9 @@
 			practitionerOptions.value = response.practitioners;
 		},
 		onError(error) {
-			dialog_message = "Failed to load practitioners department-wise. Please contact the System Manager.";
+			dialog_message.value = t("Failed to load practitioners department-wise. Please contact the System Manager.", selectedLanguage.value);
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\nError:${error.message}`;
+			error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`;
 			error_log.submit();
 		}
 	});
@@ -338,7 +346,7 @@
 		method: "POST",
 		makeParams() {
 			return {
-				error_message: error_message,
+			error_message: error_message.value,
 				error_title: "Kiosk Screen: Appointment"
 			}
 		}
@@ -372,9 +380,9 @@
 			}
 		},
 		onError(error) {
-			dialog_message = `API Error: ${error.message}`;
+			dialog_message.value = t("API Error: {0}", selectedLanguage.value, error.message);
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\nError:${error.message}`;
+			error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`;
 			error_log.submit();
 		}
 	});
@@ -389,9 +397,9 @@
 			}));
 		},
 		onError(error) {
-			dialog_message = "Unable to fetch from get_gender API. Contact System Manager"
+			dialog_message.value = t("Unable to fetch from get_gender API. Contact System Manager", selectedLanguage.value)
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\n${error.message}`
+			error_message.value = `Dialog: ${dialog_message.value}\n${error.message}`
 			error_log.submit();
 		},
 	});
@@ -416,9 +424,9 @@
 			}
 		},
 		onError(error) {
-			dialog_message = "API Error";
+			dialog_message.value = t("API Error", selectedLanguage.value);
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\nError:${error.message}`;
+			error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`;
 			error_log.submit();
 		}
 	});
@@ -428,23 +436,23 @@
 		let isValid = true;
 		if (!form_marital.value || !form_dob.value || !form_addressLine1.value || !form_city.value || !form_state.value) {
 			if (!form_addressLine1.value) {
-				errors.value.form_addressLine1 = "This field is required.";
+				errors.value.form_addressLine1 = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_city.value) {
-				errors.value.form_city = "This field is required.";
+				errors.value.form_city = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_state.value) {
-				errors.value.form_state = "This field is required.";
+				errors.value.form_state = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_marital.value) {
-				errors.value.form_marital = "This field is required.";
+				errors.value.form_marital = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_dob.value) {
-				errors.value.form_dob = "This field is required.";
+				errors.value.form_dob = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 		} else {
@@ -467,9 +475,9 @@
 				slots.value = response.slots || [];
 			},
 			onError(error) {
-				dialog_message = "Failed to fetch slots. Contact System Manager"
+				dialog_message.value = t("Failed to fetch slots. Contact System Manager", selectedLanguage.value)
 				dialog.value = true;
-				error_message = error_message = `Dialog: ${dialog_message}\nError:${error.message}`
+				error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`
 				error_log.submit();
 			},
 		});
@@ -518,11 +526,11 @@
 			await booking.submit();
 		} catch (error) {
 			if (error.message.includes("OverlapError")) {
-				dialog_message = "You have another booking at this slot"
-				dialog_title = "Already Booked"
+				dialog_message.value = t("You have another booking at this slot", selectedLanguage.value)
+				dialog_title.value = t("Already Booked", selectedLanguage.value)
 				dialog.value = true;
 			} else {
-				dialog_message = "APIError: Contact System Manager"
+				dialog_message.value = t("APIError: Contact System Manager", selectedLanguage.value)
 				dialog.value = true;
 			}
 		} finally {
