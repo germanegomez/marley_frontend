@@ -3,6 +3,7 @@ const TRANSLATION_LOAD_TIMEOUT = 10000
 const APPOINTMENT_DESK_CONTEXT = 'Marley Frontend Appointment Desk'
 const QUEUE_CONTEXT = 'Marley Frontend Queue'
 const BED_MANAGEMENT_CONTEXT = 'Marley Frontend Bed Management'
+const KIOSK_CONTEXT = 'Marley Frontend Kiosk'
 
 let translatedMessages = {}
 
@@ -29,6 +30,23 @@ export function queueTranslation(message, ...replacements) {
 
 export function bedManagementTranslation(message, ...replacements) {
 	return translate(message, replacements, BED_MANAGEMENT_CONTEXT)
+}
+
+export function kioskTranslation(message, language = 'en', ...replacements) {
+	const selected = language?.toLowerCase().split('-')[0]
+	const effective = globalThis.window?.language?.toLowerCase().split('-')[0]
+	if (selected && selected !== 'en' && selected === effective) {
+		return translate(message, replacements, KIOSK_CONTEXT)
+	}
+	return message.replace(/\{(\d+)\}/g, (placeholder, index) =>
+		replacements[Number(index)] ?? placeholder
+	)
+}
+
+export function kioskCatalogMessage(catalog, language, key) {
+	const source = catalog.en?.[key] ?? catalog[key]?.en
+	const existing = catalog[language]?.[key] ?? catalog[key]?.[language]
+	return existing ?? kioskTranslation(source, language)
 }
 
 export async function loadTranslations({ fetcher = fetch, timeout = TRANSLATION_LOAD_TIMEOUT } = {}) {

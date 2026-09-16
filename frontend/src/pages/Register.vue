@@ -10,27 +10,27 @@
 			<div class="absolute top-4 left-4">
 				<Breadcrumbs :items="[
 					{
-						label: 'Home',
+						label: t('Home', selectedLanguage),
 						route: {
 							name: 'Kiosk',
 						},
 					},
 					{
-						label: 'Register',
+						label: t('Register', selectedLanguage),
 						route: '/Register',
 					},
 				]"
 			/>
 			</div>
 			<h1 class="font-bold text-lg text-center text-ink-gray-8">
-				{{ translations.register[selectedLanguage] }}
+				{{ kioskCatalogMessage(translations, selectedLanguage, 'register') }}
 			</h1>
 
 			<div class="grid grid-cols-3 gap-2">
 				<!-- First Name -->
 				<div class="p-1">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						:label="translations.firstName[selectedLanguage]" :required="true" :disabled="false"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'firstName')" :required="true" :disabled="false"
 						v-model="firstname" class="w-full" />
 						<ErrorMessage v-if="errors.firstname" :message="errors.firstname" />
 				</div>
@@ -38,12 +38,12 @@
 				<!-- Last Name -->
 				<div class="p-1">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						:label="translations.lastName[selectedLanguage]" :disabled="false" v-model="lastname"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'lastName')" :disabled="false" v-model="lastname"
 						class="w-full" />
 				</div>
 				<div class="border-b">
 					<div class="flex flex-col items-center justify-center gap-4 p-5">
-						<Dialog v-model="open_camera" :options="{ title: 'Upload Your Photo', size: '4xl' }">
+						<Dialog v-model="open_camera" :options="{ title: t('Upload Your Photo', selectedLanguage), size: '4xl' }">
 							<template #body-content>
 								<div class="flex">
 									<div class="flex-1 flex items-center justify-center">
@@ -53,9 +53,9 @@
 									</div>
 									<div class="flex flex-col justify-center items-center gap-4 ml-4">
 										<Button v-if="!capturedImage" :ref_for="true" theme="gray" size="xl"
-											label="take_photo" :disabled="false" @click="capture_image">
+											:label="t('Take Photo', selectedLanguage)" :disabled="false" @click="capture_image">
 											<div class="flex items-center truncate">
-												<Tooltip :text="'Capture Photo'" placement="top">
+												<Tooltip :text="t('Capture Photo', selectedLanguage)" placement="top">
 													<slot name="icon">
 														<FeatherIcon :name="'camera'"
 															class="size-7 text-ink-gray-7" />
@@ -64,9 +64,9 @@
 											</div>
 										</Button>
 										<Button v-if="capturedImage" :ref_for="true" theme="gray" size="xl"
-											label="confirm_photo" :disabled="false" @click="confirm_image">
+											:label="t('Confirm Photo', selectedLanguage)" :disabled="false" @click="confirm_image">
 											<div class="flex items-center truncate">
-												<Tooltip :text="'Confirm'" placement="top">
+												<Tooltip :text="t('Confirm', selectedLanguage)" placement="top">
 													<slot name="icon">
 														<FeatherIcon :name="'check'"
 															class="size-7 text-ink-gray-7" />
@@ -75,9 +75,9 @@
 											</div>
 										</Button>
 										<Button v-if="capturedImage" :ref_for="true" theme="gray" size="xl"
-											label="retake_photo" :disabled="false" @click="clear_image">
+											:label="t('Retake Photo', selectedLanguage)" :disabled="false" @click="clear_image">
 											<div class="flex items-center truncate">
-												<Tooltip :text="'Change Photo'" placement="top">
+												<Tooltip :text="t('Change Photo', selectedLanguage)" placement="top">
 													<slot name="icon">
 														<FeatherIcon :name="'refresh-cw'"
 															class="size-7 text-ink-gray-7" />
@@ -94,7 +94,7 @@
 								<Avatar
 									size="6xl"
 									class="h-20 w-20"
-									:label="'User'"
+									:label="t('User', selectedLanguage)"
 									:image="profile_image || default_profile_image.value"
 								/>
 								<component
@@ -106,13 +106,13 @@
 												{
 													icon: 'upload',
 													label: profile_image
-													? 'Change image'
-													: 'Upload image',
+													? t('Change image', selectedLanguage)
+													: t('Upload image', selectedLanguage),
 													onClick: () => open_camera_dialog(),
 												},
 												{
 													icon: 'trash-2',
-													label: 'Remove image',
+													label: t('Remove image', selectedLanguage),
 													onClick: () => { profile_image = null; },
 												},
 											],
@@ -138,24 +138,24 @@
 
 				<!-- Gender Select -->
 				<div class="p-1">
-					<FormControl type="select" :options="genderOptions" size="sm" variant="subtle"
-						:label="translations.selectGender[selectedLanguage]" :required="true" :disabled="false"
+					<FormControl type="select" :options="translatedGenderOptions" size="sm" variant="subtle"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'selectGender')" :required="true" :disabled="false"
 						v-model="gender" class="w-full" />
 						<ErrorMessage v-if="errors.gender" :message="errors.gender" />
 				</div>
 
 				<!-- Date of birth  -->
 				<div class="p-1">
-					<FormControl type="number" v-model="age" label="Age"/>
+					<FormControl type="number" v-model="age" :label="t('Age', selectedLanguage)"/>
 				</div>
 				<div>
 					<DatePicker
 						v-model="dob"
 						variant="subtle"
-						placeholder="Date of Birth"
+						:placeholder="t('Date of Birth', selectedLanguage)"
 						:disabled="false"
 						:required="false"
-						label="Date of Birth"
+						:label="t('Date of Birth', selectedLanguage)"
 						:formatter="(date) => getFormat(date, '', true)"
 					/>
 					<ErrorMessage v-if="errors.dob" :message="errors.dob" />
@@ -164,15 +164,15 @@
 				<!-- Mobile -->
 				<div class="p-1">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
-						:label="translations.mobile[selectedLanguage]" :required="true" :disabled="false"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'mobile')" :required="true" :disabled="false"
 						v-model="mobile" class="w-full" />
 						<ErrorMessage v-if="errors.mobile" :message="errors.mobile" />
 				</div>
 
 				<!-- Marital Status -->
 				<div class="p-1">
-					<FormControl type="select" :options="['Single', 'Married', 'Divorced', 'Widow']"
-						v-model="marital_status" label="Marital Status" size="sm" :disabled="false"
+					<FormControl type="select" :options="maritalOptions"
+						v-model="marital_status" :label="t('Marital Status', selectedLanguage)" size="sm" :disabled="false"
 						:required="false" class="w-full" />
 						<ErrorMessage v-if="errors.marital_status" :message="errors.marital_status" />
 				</div>
@@ -180,40 +180,40 @@
 				<!-- Email -->
 				<div class="p-1">
 					<FormControl :type="'email'" :ref_for="true" size="sm" variant="subtle"
-						:label="translations.email[selectedLanguage]" :disabled="false" v-model="email"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'email')" :disabled="false" v-model="email"
 						:required="false" class="w-full" />
 						<ErrorMessage v-if="errors.email" :message="errors.email" />
 				</div>
 
 				<!-- Country Autocomplete -->
 				<div class="p-1">
-					<FormControl type="autocomplete" :options="countryOptions" size="sm" variant="subtle"
-						:label="translations.nation[selectedLanguage]" :disabled="false" :required="false"
+					<FormControl type="autocomplete" :options="translatedCountryOptions" size="sm" variant="subtle"
+						:label="kioskCatalogMessage(translations, selectedLanguage, 'nation')" :disabled="false" :required="false"
 						v-model="country" class="w-full"/>
 						<ErrorMessage v-if="errors.country" :message="errors.country" />
 				</div>
 				<div class="p-1">
-					<FormControl label="Address Line 1" v-model="addressLine1" type="text" size="sm"
+					<FormControl :label="t('Address Line 1', selectedLanguage)" v-model="addressLine1" type="text" size="sm"
 						variant="subtle" :disabled="false" :required="false" class="w-full" />
 						<ErrorMessage v-if="errors.addressLine1" :message="errors.addressLine1" />
 				</div>
 				<div class="p-1">
-					<FormControl label="Address Line 2" v-model="addressLine2" type="text" size="sm"
+					<FormControl :label="t('Address Line 2', selectedLanguage)" v-model="addressLine2" type="text" size="sm"
 						variant="subtle" :disabled="false" :required="false" class="w-full" />
 						<ErrorMessage v-if="errors.addressLine2" :message="errors.addressLine2" />
 				</div>
 				<div class="p-1">
-					<FormControl label="City/District" v-model="city" type="text" size="sm"
+					<FormControl :label="t('City/District', selectedLanguage)" v-model="city" type="text" size="sm"
 						variant="subtle" :disabled="false" :required="false" class="w-full" />
 						<ErrorMessage v-if="errors.city" :message="errors.city" />
 				</div>
 				<div class="p-1">
-					<FormControl label="State/Province" v-model="state" type="text" size="sm"
+					<FormControl :label="t('State/Province', selectedLanguage)" v-model="state" type="text" size="sm"
 						variant="subtle" :disabled="false" :required="false" class="w-full" />
 						<ErrorMessage v-if="errors.state" :message="errors.state" />
 				</div>
 				<div class="p-1">
-					<FormControl label="ZIP Code" v-model="zip" type="text" size="sm" variant="subtle"
+					<FormControl :label="t('ZIP Code', selectedLanguage)" v-model="zip" type="text" size="sm" variant="subtle"
 						:disabled="false" :required="false" class="w-full" />
 						<ErrorMessage v-if="errors.zip" :message="errors.zip" />
 				</div>
@@ -231,16 +231,16 @@
 					:disabled="patient_registration.loading"
 					:loading="patient_registration.loading"
 				>
-					{{ translations.submit[selectedLanguage] }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'submit') }}
 				</Button>
 			</div>
 		</div>
-		<Footer />
+		<Footer :language="selectedLanguage" />
 
 		<!-- error alert boxes -->
 		<Dialog :options="{
-			title: dialog_title || 'Message',
-			message: `${dialog_message}` || 'Error in Fetching Appointments',
+			title: dialog_title || t('Message', selectedLanguage),
+			message: dialog_message || t('Error in Fetching Appointments', selectedLanguage),
 			size: 'xl',
 			icon: {
 				name: 'alert-triangle',
@@ -248,22 +248,23 @@
 			},
 			actions: [
 				{
-					label: 'OK',
+					label: t('OK', selectedLanguage),
 					variant: 'solid',
 				},
 			],
-		}" v-model="error_dialog" @click="error_dialog.value = false" />
+		}" v-model="error_dialog" @click="error_dialog = false" />
 	</div>
 </template>
 
 <script setup>
-	import { ref, watch, onUnmounted } from "vue";
+	import { computed, ref, watch, onUnmounted } from "vue";
 	import { createResource, ErrorMessage, Breadcrumbs, FormControl, Dialog, Avatar, Dropdown, Checkbox, DatePicker } from "frappe-ui";
 	import CameraIcon from '@/components/Icons/CameraIcon.vue'
 	import { useRouter } from "vue-router";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
 	import { getFormat } from '@/utils'
+	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	const firstname = ref("");
 	const lastname = ref("");
@@ -272,6 +273,7 @@
 	const passport_number = ref("");
 	let gender = ref(null);
 	let genderOptions = ref([]);
+	let selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
 	let country = ref({ "label": "India", "value": "India" });
 	let countryOptions = ref([]);
 	const router = useRouter();
@@ -402,16 +404,16 @@
 		onError(error) {
 			if(error.message.includes("UniqueValidationError")) {
 				if(aadhaar_number.value) {
-					dialog_message = "Patient Registration failed. Aadhaar Number Duplication"
+					dialog_message.value = t("Patient Registration failed. Aadhaar Number Duplication", selectedLanguage.value)
 				}
 				if (passport_number.value) {
-					dialog_message = "Patient Registration failed. Passport Number Duplication"
+					dialog_message.value = t("Patient Registration failed. Passport Number Duplication", selectedLanguage.value)
 				}
 			}
 			else {
-				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Patient Creation Failed";
-				error_message = `Dialog: ${dialog_message}.\n ${error.message}`
+				dialog_message.value = error.messages?.[0] || error;
+				dialog_title.value = t("Patient Creation Failed", selectedLanguage.value);
+				error_message.value = `Dialog: ${dialog_message.value}.\n ${error.message}`
 				error_log.submit();
 			}
 			error_dialog.value = true;
@@ -432,16 +434,33 @@
 			}));
 		},
 		onError(error) {
-			dialog_message = "Unable to fetch from get_gender API. Contact System Manager"
+			dialog_message.value = t("Unable to fetch from get_gender API. Contact System Manager", selectedLanguage.value)
 			error_dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\n${error.message}`
+			error_message.value = `Dialog: ${dialog_message.value}\n${error.message}`
 			error_log.submit();
 		},
 	});
 	fetch();
 
 	// Language Selection logic
-	let selectedLanguage = ref(localStorage.getItem("selectedLanguage") || "en");
+	const translatedGenderOptions = computed(() =>
+		genderOptions.value.map(option => ({
+			...option,
+			label: t(option.label, selectedLanguage.value),
+		}))
+	);
+	const translatedCountryOptions = computed(() =>
+		countryOptions.value.map(option => ({
+			...option,
+			label: t(option.label, selectedLanguage.value),
+		}))
+	);
+	const maritalOptions = computed(() =>
+		['Single', 'Married', 'Divorced', 'Widow'].map(value => ({
+			label: t(value, selectedLanguage.value),
+			value,
+		}))
+	);
 
 	let translations = {
 		register: {
@@ -501,7 +520,7 @@
 		method: "POST",
 		makeParams() {
 			return {
-				error_message: error_message,
+				error_message: error_message.value,
 				error_title: "Kiosk Screen: Register"
 			}
 		}
@@ -512,15 +531,15 @@
 		let isValid = true;
 		if (!firstname.value || !gender.value || !mobile.value) {
 			if (!firstname.value ) {
-				errors.value.firstname = "This field is required.";
+				errors.value.firstname = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!gender.value) {
-				errors.value.gender = "This field is required.";
+				errors.value.gender = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!mobile.value ) {
-				errors.value.mobile = "This field is required.";
+				errors.value.mobile = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 		} else {

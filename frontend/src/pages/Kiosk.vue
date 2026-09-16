@@ -8,7 +8,7 @@
 		<div
 			class="relative flex flex-col items-center justify-center space-y-6 p-4 bg-surface-white rounded-lg shadow-lg border w-[800px] min-h-[600px] max-h-[600px]">
 			<div class="flex flex-col justify-center items-center gap-4 py-8">
-				<img :src="brand" alt="Welcome Image" class="w-full max-h-[8vh] object-contain" />
+				<img :src="brand" :alt="t('Welcome Image', selectedLanguage)" class="w-full max-h-[8vh] object-contain" />
 			</div>
 
 			<div class="flex justify-center items-center gap-2 py-4">
@@ -17,7 +17,7 @@
 					:ref_for="true"
 					size="lg"
 					variant="subtle"
-					:placeholder="translations[selectedLanguage].placeholder"
+					:placeholder="kioskCatalogMessage(translations, selectedLanguage, 'placeholder')"
 					v-model="patient_id"
 				/>
 				<Button
@@ -28,14 +28,14 @@
 					theme="gray"
 					size="lg"
 				>
-					{{ translations[selectedLanguage].submit }}
+					{{ kioskCatalogMessage(translations, selectedLanguage, 'submit') }}
 				</Button>
 			</div>
 		</div>
-		<Footer />
+		<Footer :language="selectedLanguage" />
 	</div>
 	<Dialog :options="{
-		title: 'Error',
+		title: t('Error', selectedLanguage),
 		message: `${dialog_message}`,
 		size: 'xl',
 		icon: {
@@ -44,7 +44,7 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK', selectedLanguage),
 				variant: 'solid',
 				onClick: () => {
 					dialog = false;
@@ -53,7 +53,7 @@
 		],
 	}" v-model="dialog" />
 	<Dialog :options="{
-		title: 'Alert',
+		title: t('Alert', selectedLanguage),
 		size: '2xl',
 		icon: {
 			name: 'alert-triangle',
@@ -61,39 +61,39 @@
 		},
 	}" v-model="dialogReg">
 		<template #body-content>
-			<h3 class="text-ink-gray-8">No Patient found for the given Mobile number. Proceed to new Patient registration?</h3>
+			<h3 class="text-ink-gray-8">{{ t('No Patient found for the given Mobile number. Proceed to new Patient registration?', selectedLanguage) }}</h3>
 		</template>
 		<template #actions>
 			<Button variant="solid" @click="router.push('Register')">
-				Confirm
+				{{ t('Confirm', selectedLanguage) }}
 			</Button>
 			<Button class="ml-2" @click="dialogReg = false">
-				Cancel
+				{{ t('Cancel', selectedLanguage) }}
 			</Button>
 		</template>
 	</Dialog>
 
 	<Dialog v-model="dialogOtp">
 		<template #body-title>
-			<h3 class="text-ink-gray-8">Enter OTP</h3>
+			<h3 class="text-ink-gray-8">{{ t('Enter OTP', selectedLanguage) }}</h3>
 		</template>
 		<template #body-content>
 			<FormControl :type="'text'" :ref_for="true" size="md" variant="subtle"
-				label="Enter the OTP obtained on mobile number" :disabled="false" v-model="otpInput" />
+				:label="t('Enter the OTP obtained on mobile number', selectedLanguage)" :disabled="false" v-model="otpInput" />
 		</template>
 		<template #actions>
 			<Button variant="solid" @click="checkOtp">
-				Confirm
+				{{ t('Confirm', selectedLanguage) }}
 			</Button>
 			<Button class="ml-2" @click="dialogOtp = false">
-				Close
+				{{ t('Close', selectedLanguage) }}
 			</Button>
 		</template>
 	</Dialog>
 
 	<Dialog v-model="dialogPatient">
 		<template #body-title>
-			<h3 class="text-ink-gray-8">Select a Patient</h3>
+			<h3 class="text-ink-gray-8">{{ t('Select a Patient', selectedLanguage) }}</h3>
 		</template>
 		<template #body-content>
 			<div v-if="patientList.length > 0">
@@ -103,24 +103,24 @@
 						:class="{ 'bg-gray-200': selectedPatient === patient.name }" @click="selectPatient(patient.name)">
 						<div>
 							<strong class="text-ink-gray-7">{{ patient.patient_name }}</strong>
-							<p class="text-sm text-gray-600 py-1">ID: {{ patient.name }}</p>
+						<p class="text-sm text-gray-600 py-1">{{ t('ID', selectedLanguage) }}: {{ patient.name }}</p>
 						</div>
 					</li>
 				</ul>
 			</div>
 			<div v-else>
-				<p>No patients found.</p>
+				<p>{{ t('No patients found.', selectedLanguage) }}</p>
 			</div>
 		</template>
 		<template #actions>
 			<Button variant="solid" :disabled="!selectedPatient" @click="confirmSelection">
-				Confirm
+				{{ t('Confirm', selectedLanguage) }}
 			</Button>
 			<Button class="ml-2" @click="dialogPatient = false">
-				Close
+				{{ t('Close', selectedLanguage) }}
 			</Button>
 			<Button class="ml-2" @click="router.push('Register')">
-				Register New Patient
+				{{ t('Register New Patient', selectedLanguage) }}
 			</Button>
 		</template>
 	</Dialog>
@@ -128,6 +128,7 @@
 	<!-- patient profile completeion before booking -->
 	<CompleteProfileDialog
 		v-model="complete_profile_dialog"
+		:language="selectedLanguage"
 		:form_firstName="form_firstName"
 		:onUpdate:form_firstName="val => form_firstName = val"
 		:form_lastName="form_lastName"
@@ -151,7 +152,7 @@
 		:form_zip="form_zip"
 		:onUpdate:form_zip="val => form_zip = val"
 		:errors="errors"
-		:genderOptions="genderOptions"
+		:genderOptions="translatedGenderOptions"
 		@confirm="handleConfirm"
 		@skip="handleSkip"
 	/>
@@ -160,11 +161,12 @@
 <script setup>
 	import { useRouter } from "vue-router";
 	import { Button, FormControl, Dialog, createResource } from "frappe-ui";
-	import { ref, onMounted } from "vue";
+	import { computed, ref, onMounted } from "vue";
 	import LanguageSelector from '@/components/LanguageSelector.vue';
 	import Footer from '@/components/Footer.vue';
 	import CompleteProfileDialog from '@/components/CompleteProfileDialog.vue';
 	import defaultLogo from '@/assets/MH-logo.svg'
+	import { kioskCatalogMessage, kioskTranslation as t } from '@/translation'
 
 	let patient_id = ref("");
 	let dialog = ref(false);
@@ -192,6 +194,12 @@
 	let form_state = ref("");
 	let form_zip = ref("");
 	let genderOptions = ref([]);
+	const translatedGenderOptions = computed(() =>
+		genderOptions.value.map(option => ({
+			...option,
+			label: t(option.label, selectedLanguage.value),
+		}))
+	);
 
 	const brand = ref(defaultLogo);
 	let get_brand_image = createResource({
@@ -215,8 +223,8 @@
 			genderOptions.value = response.genders;
 		},
 		onError(error) {
-			dialog_title = "Fetching Gender Failed";
-			dialog_message = error.messages?.[0] || error;
+			dialog_title.value = t("Fetching Gender Failed", selectedLanguage.value);
+			dialog_message.value = error.messages?.[0] || error;
 			dialog.value = true;
 		},
 	});
@@ -269,14 +277,18 @@
 				patientList.value = response.patients;
 				dialogPatient.value = true;
 			} else if (response["error"]) {
-				dialog_message = `${response["error"]}. Proceed to New Patient Registration`;
+				dialog_message.value = t(
+					"{0}. Proceed to New Patient Registration",
+					selectedLanguage.value,
+					response["error"],
+				);
 				dialogReg.value = true;
 			}
 		},
 		onError(error) {
-			dialog_message = "APIError: Please contact the System Manager."
+			dialog_message.value = t("APIError: Please contact the System Manager.", selectedLanguage.value)
 			dialog.value = true;
-			error_message = `Dialog: ${dialog_message}\nError:${error.message}`;
+			error_message.value = `Dialog: ${dialog_message.value}\nError:${error.message}`;
 			error_log.submit()
 		}
 	});
@@ -330,7 +342,8 @@
 			if(response) {
 				if (response.status == "Failed") {
 					dialog.value = true;
-					error_message = response.message;
+					dialog_message.value = response.message;
+					error_message.value = response.message;
 				} else if (response.status == "Success") {
 					if (response.alert) {
 						alert(response.message);
@@ -342,7 +355,8 @@
 		},
 		onError(error) {
 			dialog.value = true;
-			error_message = error.messages?.[0] || error;;
+			dialog_message.value = error.messages?.[0] || error;
+			error_message.value = dialog_message.value;
 		}
 	})
 
@@ -351,7 +365,7 @@
 		method: "POST",
 		makeParams() {
 			return {
-				error_message: error_message,
+				error_message: error_message.value,
 				error_title: "Kiosk Screen: PatientID"
 			}
 		}
@@ -359,7 +373,7 @@
 
 	function handleButtonClick() {
 		if (!patient_id.value || patient_id.value.length < 7 || patient_id.value.length > 15 || isNaN(patient_id.value)) {
-			dialog_message = "Please enter a valid Mobile Number"
+			dialog_message.value = t("Please enter a valid Mobile Number", selectedLanguage.value)
 			dialog.value = true;
 			return;
 		}
@@ -385,7 +399,7 @@
 			localStorage.setItem("patient_phone", patient_id.value)
 			patient_verification.fetch();
 		} else {
-			dialog_message = "OTP doesn't match";
+			dialog_message.value = t("OTP doesn't match", selectedLanguage.value);
 			dialog.value = true;
 		}
 	}
@@ -419,8 +433,8 @@
 				}
 			},
 			onError(error) {
-				dialog_title = "Fetching Profile Failed";
-				dialog_message = error.messages?.[0] || error;
+				dialog_title.value = t("Fetching Profile Failed", selectedLanguage.value);
+				dialog_message.value = error.messages?.[0] || error;
 				dialog.value = true;
 			},
 		});
@@ -432,35 +446,35 @@
 		let isValid = true;
 		if (!form_lastName.value || !form_mobile.value || !form_dob.value || !form_addressLine1.value || !form_city.value || !form_marital.value || !form_state.value || !form_zip.value) {
 			if (!form_addressLine1.value) {
-				errors.value.form_addressLine1 = "This field is required.";
+				errors.value.form_addressLine1 = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_city.value) {
-				errors.value.form_city = "This field is required.";
+				errors.value.form_city = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_state.value) {
-				errors.value.form_state = "This field is required.";
+				errors.value.form_state = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_marital.value) {
-				errors.value.form_marital = "This field is required.";
+				errors.value.form_marital = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_dob.value) {
-				errors.value.form_dob = "This field is required.";
+				errors.value.form_dob = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_mobile.value) {
-				errors.value.form_mobile = "This field is required.";
+				errors.value.form_mobile = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_lastName.value) {
-				errors.value.form_lastName = "This field is required.";
+				errors.value.form_lastName = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 			if (!form_zip.value) {
-				errors.value.form_zip = "This field is required.";
+				errors.value.form_zip = t("This field is required.", selectedLanguage.value);
 				isValid = false;
 			}
 		} else {
@@ -498,8 +512,8 @@
 			get_appointment.fetch();
 		},
 		onError(error) {
-			dialog_title = "Updating Patient Failed";
-			dialog_message = error.messages?.[0] || error;
+			dialog_title.value = t("Updating Patient Failed", selectedLanguage.value);
+			dialog_message.value = error.messages?.[0] || error;
 			dialog.value = true;
 		}
 	});
