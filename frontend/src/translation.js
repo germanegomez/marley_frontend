@@ -1,6 +1,7 @@
 const TRANSLATIONS_URL = '/api/method/marley_frontend.www.healthcare.get_translations'
 const TRANSLATION_LOAD_TIMEOUT = 10000
 const APPOINTMENT_DESK_CONTEXT = 'Marley Frontend Appointment Desk'
+const BED_MANAGEMENT_CONTEXT = 'Marley Frontend Bed Management'
 
 let translatedMessages = {}
 
@@ -19,6 +20,10 @@ export function translate(message, replacements = [], context = null) {
 
 export function appointmentDeskTranslation(message, ...replacements) {
 	return translate(message, replacements, APPOINTMENT_DESK_CONTEXT)
+}
+
+export function bedManagementTranslation(message, ...replacements) {
+	return translate(message, replacements, BED_MANAGEMENT_CONTEXT)
 }
 
 export async function loadTranslations({ fetcher = fetch, timeout = TRANSLATION_LOAD_TIMEOUT } = {}) {
