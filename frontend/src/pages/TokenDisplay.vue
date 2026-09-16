@@ -24,12 +24,12 @@
 		<!-- Rightmost Section -->
 		<div class="right-section border-l p-4 flex items-center justify-center">
 			<template v-if="fileContent">
-				<img v-if="isImage(fileContent)" :src="fileContent" alt="File Content" class="stretch-image" />
+				<img v-if="isImage(fileContent)" :src="fileContent" :alt="t('File Content')" class="stretch-image" />
 				<div v-else class="p-4 bg-gray-100 border rounded shadow-md text-center w-full h-full">
 					<p>{{ fileContent }}</p>
 				</div>
 			</template>
-			<p v-else class="text-gray-500 italic">No file to display</p>
+			<p v-else class="text-gray-500 italic">{{ t('No file to display') }}</p>
 		</div>
 	</div>
 
@@ -43,11 +43,11 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK'),
 				variant: 'solid',
 			},
 		],
-	}" v-model="warning_dialog" @click="warning_dialog.value = false"/>
+	}" v-model="warning_dialog" @click="warning_dialog = false"/>
 </template>
 
 <style scoped>
@@ -137,6 +137,7 @@
 import { ref, onMounted, onBeforeUnmount, inject } from "vue";
 import { useRoute } from "vue-router";
 import { createResource, Dialog } from "frappe-ui";
+import { queueTranslation as t } from "@/translation";
 
 const route = useRoute();
 const queues = ref(JSON.parse(route.query.queues || "[]"));
@@ -160,7 +161,9 @@ if (socket) {
 
 	socket.on("call", (data) => {
 		// Speak the token number
-		let utterance = new SpeechSynthesisUtterance(`Token Number ${data.token_number} to ${data.service_unit_name}`);
+		let utterance = new SpeechSynthesisUtterance(
+			t('Token Number {0} to {1}', data.token_number, data.service_unit_name)
+		);
 		speechSynthesis.cancel();
 		speechSynthesis.speak(utterance);
 
@@ -219,8 +222,8 @@ const fetchTokens = (service_unit) => {
 			practitioners.value[service_unit] = response["practitioner"] || "";
 		},
 		onError: (error) => {
-			dialog_title = "Fetching Tokens Failed";
-			dialog_message = error.messages?.[0] || error;
+			dialog_title.value = t("Fetching Tokens Failed");
+			dialog_message.value = error.messages?.[0] || error;
 			warning_dialog.value = true;
 		},
 	});
@@ -240,8 +243,8 @@ const fetchFileLocation = () => {
 			fetchFileContent();
 		},
 		onError: (error) => {
-			dialog_title = "Fetching Advertisement File Failed";
-			dialog_message = error.messages?.[0] || error;
+			dialog_title.value = t("Fetching Advertisement File Failed");
+			dialog_message.value = error.messages?.[0] || error;
 			warning_dialog.value = true;
 		},
 	});
@@ -268,8 +271,8 @@ const fetchFileContent = async () => {
 			fileContent.value = text;
 		}
 	} catch (error) {
-		dialog_title = "Fetching File Content Failed";
-		dialog_message = error.messages?.[0] || error;
+		dialog_title.value = t("Fetching File Content Failed");
+		dialog_message.value = error.messages?.[0] || error;
 		warning_dialog.value = true;
 	}
 };

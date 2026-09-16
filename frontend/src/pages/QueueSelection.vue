@@ -1,14 +1,14 @@
 <template>
 	<div class="flex h-screen items-center justify-center bg-surface-white">
 		<div class="flex flex-col items-center justify-center space-y-8 p-8 bg-white rounded-xl shadow-xl border w-[50vw] h-[50vh]">
-			<h1 class="text-3xl font-bold">Select the Queues</h1>
+			<h1 class="text-3xl font-bold">{{ t('Select the Queues') }}</h1>
 			<div class="p-2 w-[30vw]">
-				<Autocomplete :options=unit_options placeholder="Service Units" :multiple="true" v-model="units" />
+				<Autocomplete :options=unit_options :placeholder="t('Service Units')" :multiple="true" v-model="units" />
 			</div>
 			<div>
 				<Button
 					variant="solid"
-					:label="'Submit'"
+					:label="t('Submit')"
 					@click="goToTokenDisplay"
 					size="lg"
 				/>
@@ -16,7 +16,7 @@
 		</div>
 	</div>
 	<div class="absolute bottom-4 right-4 text-gray-600 text-sm">
-		Powered by Marley Healthcare
+		{{ t('Powered by Marley Healthcare') }}
 	</div>
 
 	<Dialog :options="{
@@ -29,11 +29,11 @@
 		},
 		actions: [
 			{
-				label: 'OK',
+				label: t('OK'),
 				variant: 'solid',
 			},
 		],
-	}" v-model="warning_dialog" @click="warning_dialog.value = false"/>
+	}" v-model="warning_dialog" @click="warning_dialog = false"/>
 </template>
 
 <style scoped>
@@ -47,6 +47,7 @@
 import { ref, watch } from "vue";
 import { createResource, Dialog, Autocomplete } from "frappe-ui";
 import { useRouter } from "vue-router";
+import { queueTranslation as t } from "@/translation";
 
 const router = useRouter();
 
@@ -82,8 +83,8 @@ const { fetch } = createResource({
 		unit_options.value = response;
 	},
 	onError: (error) => {
-		dialog_title = "Fetching Units Failed";
-		dialog_message = error.messages?.[0] || error;
+		dialog_title.value = t("Fetching Units Failed");
+		dialog_message.value = error.messages?.[0] || error;
 		warning_dialog.value = true;
 	},
 });
