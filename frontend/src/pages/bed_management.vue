@@ -2,7 +2,7 @@
 	<div class="w-full h-full bg-surface-white">
 		<div class="flex p-4 items-center border-b border">
 			<div class="p-4 w-1/4">
-				<Autocomplete :options=type_options placeholder="Room Type" v-model="room_type_filter" size="sm">
+				<Autocomplete :options=type_options :placeholder="t('Room Type')" v-model="room_type_filter" size="sm">
 					<template #prefix>
 					</template>
 					<template #item-prefix="{ option }">
@@ -10,7 +10,7 @@
 				</Autocomplete>
 			</div>
 			<div class="p-3 w-1/4">
-				<Autocomplete :options=service_unit_options placeholder="Bed" v-model="bed_filter" size="sm">
+				<Autocomplete :options=service_unit_options :placeholder="t('Bed')" v-model="bed_filter" size="sm">
 					<template #prefix>
 					</template>
 					<template #item-prefix="{ option }">
@@ -18,7 +18,7 @@
 				</Autocomplete>
 			</div>
 			<div class="p-3 w-1/4">
-				<Autocomplete :options=patient_options placeholder="Patient" v-model="patient_filter" size="sm">
+				<Autocomplete :options=patient_options :placeholder="t('Patient')" v-model="patient_filter" size="sm">
 					<template #prefix>
 					</template>
 					<template #item-prefix="{ option }">
@@ -26,16 +26,16 @@
 				</Autocomplete>
 			</div>
 			<div class="p-3 w-1/4">
-				<FormControl type="select" :options="room_status_options" placeholder="Room Status"
+				<FormControl type="select" :options="translated_room_status_options" :placeholder="t('Room Status')"
 					v-model="status_filter" size="sm" />
 			</div>
 			<div class="w-1/5">
-				<DatePicker v-model="date_filter" variant="subtle" placeholder="Date" :disabled="false" :formatter="(date) => getFormat(date, '', true)" />
+				<DatePicker v-model="date_filter" variant="subtle" :placeholder="t('Date')" :disabled="false" :formatter="(date) => getFormat(date, '', true)" />
 			</div>
 			<div class="p-1">
-				<Button :ref_for="true" theme="gray" label="Clear Filters" :disabled="false" @click="clear_filters()">
+				<Button :ref_for="true" theme="gray" :label="t('Clear Filters')" :disabled="false" @click="clear_filters()">
 					<div class="flex items-center truncate">
-						<Tooltip :text="'Clear Filter'" placement="top">
+						<Tooltip :text="t('Clear Filter')" placement="top">
 							<slot name="icon">
 								<FeatherIcon :name="'x'" class="size-4 text-ink-gray-7" />
 							</slot>
@@ -95,14 +95,14 @@
 								'bg-violet-700 text-white': selectedBed.room_status === 'Under Maintenance',
 							}"
 						>
-							{{ selectedBed.room_status.toUpperCase() }}
+							{{ t(selectedBed.room_status).toUpperCase() }}
 						</span>
 
 						<span
 							v-if="['Admission Scheduled', 'Admitted'].includes(selectedBed.ip_status) && selectedBed.room_status === 'Cleaning'"
 							class="px-3 py-1 text-xs font-bold rounded-md bg-red-200 text-red-700"
 						>
-							{{ selectedBed.ip_status.toUpperCase() }}
+							{{ t(selectedBed.ip_status).toUpperCase() }}
 						</span>
 					</div>
 
@@ -119,30 +119,30 @@
 						v-if="selectedBed.room_status == 'Occupied' || ['Admission Scheduled', 'Admitted'].includes(selectedBed.ip_status)"
 						class="mt-6"
 					>
-						<h3 class="font-semibold text-base sm:text-xl py-2 border-b border-gray-200">Occupancy Details</h3>
+						<h3 class="font-semibold text-base sm:text-xl py-2 border-b border-gray-200">{{ t('Occupancy Details') }}</h3>
 
 						<div class="space-y-1 text-gray-600 text-sm sm:text-base mt-2">
-							<p><b>Patient: </b> {{ selectedBed.patient_name }}</p>
-							<p class="mt-1"><b>Encounter: </b> {{ selectedBed.admission_encounter }}</p>
-							<p class="mt-1"><b>Practitioner: </b> {{ selectedBed.primary_practitioner }}</p>
+							<p><b>{{ t('Patient') }}: </b> {{ selectedBed.patient_name }}</p>
+							<p class="mt-1"><b>{{ t('Encounter') }}: </b> {{ selectedBed.admission_encounter }}</p>
+							<p class="mt-1"><b>{{ t('Practitioner') }}: </b> {{ selectedBed.primary_practitioner }}</p>
 							<p class="mt-1">
 								<b>IPD: </b>
 								<button class="text-blue-600 underline" @click="navigate_to_ip(selectedBed.ip_record)">
 									{{ selectedBed.ip_record }}
 								</button>
 							</p>
-							<p class="mt-1"><b>IP Status: </b> {{ selectedBed.ip_status }}</p>
-							<p class="mt-1"><b>Checked In Time: </b> {{ formatDatetime(selectedBed.check_in) }}</p>
-							<p class="mt-1"><b>Admission Ordered For: </b> {{ formatDate(selectedBed.admission_ordered_for) }}</p>
-							<p class="mt-1"><b>Expected Discharge: </b> {{ formatDate(selectedBed.expected_discharge) }}</p>
-							<p class="mt-1"><b>Admitted On: </b> {{ formatDatetime(selectedBed.admitted_datetime) }}</p>
-							<p class="mt-1"><b>Discharged On: </b> {{ formatDatetime(selectedBed.discharge_datetime) }}</p>
+							<p class="mt-1"><b>{{ t('IP Status') }}: </b> {{ t(selectedBed.ip_status) }}</p>
+							<p class="mt-1"><b>{{ t('Checked In Time') }}: </b> {{ formatDatetime(selectedBed.check_in) }}</p>
+							<p class="mt-1"><b>{{ t('Admission Ordered For') }}: </b> {{ formatDate(selectedBed.admission_ordered_for) }}</p>
+							<p class="mt-1"><b>{{ t('Expected Discharge') }}: </b> {{ formatDate(selectedBed.expected_discharge) }}</p>
+							<p class="mt-1"><b>{{ t('Admitted On') }}: </b> {{ formatDatetime(selectedBed.admitted_datetime) }}</p>
+							<p class="mt-1"><b>{{ t('Discharged On') }}: </b> {{ formatDatetime(selectedBed.discharge_datetime) }}</p>
 						</div>
 					</div>
 
 					<!-- Actions Section -->
 					<div class="mt-6 py-6 px-3 border-t border-gray-200">
-						<h3 class="flex justify-center text-base sm:text-lg font-semibold">Actions</h3>
+						<h3 class="flex justify-center text-base sm:text-lg font-semibold">{{ t('Actions') }}</h3>
 
 						<div class="flex flex-wrap justify-center gap-3 mt-4">
 							<!-- Each button shrinks and wraps properly on small screens -->
@@ -151,12 +151,12 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Schedule Admission"
+								:label="t('Schedule Admission')"
 								:disabled="selectedBed.disable_schedule"
 								@click="schedule_admission_dialog(selectedBed)"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Schedule Admission'" placement="top">
+								<Tooltip :text="t('Schedule Admission')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'plus'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -168,11 +168,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Admit"
+								:label="t('Admit')"
 								@click="admit_confirm = true"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Admit'" placement="top">
+								<Tooltip :text="t('Admit')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'user-plus'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -184,11 +184,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Set as Vacant"
+								:label="t('Set as Vacant')"
 								@click="set_status(selectedBed, 'Vacant')"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Set as Vacant'" placement="top">
+								<Tooltip :text="t('Set as Vacant')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'check'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -200,11 +200,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Transfer"
+								:label="t('Transfer')"
 								@click="transfer_dialog(selectedBed)"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Transfer'" placement="top">
+								<Tooltip :text="t('Transfer')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'repeat'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -216,11 +216,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Under Maintenance"
+								:label="t('Under Maintenance')"
 								@click="set_status(selectedBed, 'Under Maintenance')"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Under Maintenance'" placement="top">
+								<Tooltip :text="t('Under Maintenance')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'alert-triangle'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -232,11 +232,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Cleaning"
+								:label="t('Cleaning')"
 								@click="set_status(selectedBed, 'Cleaning')"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Cleaning'" placement="top">
+								<Tooltip :text="t('Cleaning')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'zap'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -248,11 +248,11 @@
 								variant="outline"
 								theme="gray"
 								size="xl"
-								label="Cleaning Completed"
+								:label="t('Cleaning Completed')"
 								@click="set_status(selectedBed, 'Cleaning Completed')"
 								class="px-3 py-4 sm:px-4 sm:py-6 rounded-md flex-shrink"
 							>
-								<Tooltip :text="'Cleaning Completed'" placement="top">
+								<Tooltip :text="t('Cleaning Completed')" placement="top">
 									<slot name="icon">
 										<FeatherIcon :name="'check'" class="size-8 sm:size-10 text-ink-gray-7" />
 									</slot>
@@ -263,7 +263,7 @@
 				</div>
 
 				<!-- Fallback -->
-				<div v-else class="text-gray-500 text-center mt-10 text-sm sm:text-base">Select a bed</div>
+			<div v-else class="text-gray-500 text-center mt-10 text-sm sm:text-base">{{ t('Select a bed') }}</div>
 			</div>
 
 		</div>
@@ -279,7 +279,7 @@
 			},
 			actions: [
 				{
-					label: 'OK',
+					label: t('OK'),
 					variant: 'solid',
 				},
 			],
@@ -296,7 +296,7 @@
 			},
 			actions: [
 				{
-					label: 'OK',
+					label: t('OK'),
 					variant: 'solid',
 				},
 			],
@@ -307,46 +307,46 @@
 			size: '2xl',
 		}">
 			<template #body-title>
-				<h3 class="font-bold">Allocate Bed</h3>
+				<h3 class="font-bold">{{ t('Allocate Bed') }}</h3>
 			</template>
 			<template #body-content>
 				<div class="mb-4">
 					<div class="grid grid-cols-3 gap-2">
 						<div class="py-1 w-full">
-							<FormControl type="autocomplete" :options="allocate_patient_options" label="Patient"
+							<FormControl type="autocomplete" :options="allocate_patient_options" :label="t('Patient')"
 								v-model="allocate_patient" size="sm" variant="subtle" :disabled="false"
 								:required="true" />
 							<ErrorMessage v-if="errors.allocate_patient" :message="errors.allocate_patient" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Patient ID" v-model="allocate_patient_id" size="sm"
+							<FormControl type="text" :label="t('Patient ID')" v-model="allocate_patient_id" size="sm"
 								variant="subtle" :disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="autocomplete" :options="allocate_encounter_options" label="Encounter"
+							<FormControl type="autocomplete" :options="allocate_encounter_options" :label="t('Encounter')"
 								v-model="allocate_encounter" size="sm" variant="subtle" :disabled="false" />
 						</div>
 						<div class="py-1 w-full">
 							<DateTimePicker v-model="allocate_admission_date" variant="subtle"
-								placeholder="Admission Date" label="Admission Date" :disabled="false"
+								:placeholder="t('Admission Date')" :label="t('Admission Date')" :disabled="false"
 								:required="true" :formatter="(date) => getFormat(date, '', true, true)" />
 							<ErrorMessage v-if="errors.allocate_admission_date"
 								:message="errors.allocate_admission_date" />
 						</div>
 						<div class="py-1 w-full">
 							<FormControl type="autocomplete" :options="allocate_primary_consultant_options"
-								label="Primary Consultant" v-model="allocate_primary_consultant" size="sm"
+								:label="t('Primary Consultant')" v-model="allocate_primary_consultant" size="sm"
 								variant="subtle" :disabled="false" :required="true" />
 							<ErrorMessage v-if="errors.allocate_primary_consultant"
 								:message="errors.allocate_primary_consultant" />
 						</div>
 						<div class="py-1 w-full">
 							<FormControl type="autocomplete" :options="allocate_secondary_consultant_options"
-								label="Secondary Consultant" v-model="allocate_secondary_consultant" size="sm"
+								:label="t('Secondary Consultant')" v-model="allocate_secondary_consultant" size="sm"
 								variant="subtle" :disabled="false" :required="false" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Expected Length of Stay"
+							<FormControl type="text" :label="t('Expected Length of Stay')"
 								v-model="allocate_expected_length_of_stay" size="sm" variant="subtle"
 								:disabled="false" :required="true" />
 							<ErrorMessage v-if="errors.allocate_expected_length_of_stay"
@@ -355,11 +355,11 @@
 					</div>
 					<div class="grid grid-cols-3 gap-2 py-4">
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Bed Type" v-model="allocate_bed_type" size="sm"
+							<FormControl type="text" :label="t('Bed Type')" v-model="allocate_bed_type" size="sm"
 								variant="subtle" :disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="autocomplete" :options="allocate_rooms_options" label="Bed"
+							<FormControl type="autocomplete" :options="allocate_rooms_options" :label="t('Bed')"
 								v-model="allocate_bed" size="sm" variant="subtle" :disabled="true" />
 						</div>
 					</div>
@@ -369,7 +369,7 @@
 				</div>
 			</template>
 			<template #actions>
-				<Button variant="solid" @click="schedule_admission()" :disabled="can_admit">Order Admission</Button>
+					<Button variant="solid" @click="schedule_admission()" :disabled="can_admit">{{ t('Order Admission') }}</Button>
 			</template>
 		</Dialog>
 
@@ -378,44 +378,44 @@
 			size: '2xl',
 		}">
 			<template #body-title>
-				<h3 class="font-bold">Transfer Bed</h3>
+				<h3 class="font-bold">{{ t('Transfer Bed') }}</h3>
 			</template>
 			<template #body-content>
 				<div class="mb-4">
 					<div class="flex gap-2 mb-4">
 						<Switch
-							label="For Procedure"
+							:label="t('For Procedure')"
 							:disabled="false"
 							v-model="for_procedure"
 						/>
 					</div>
 					<div class="grid grid-cols-3 gap-2">
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Patient" v-model="transfer_patient" size="sm" variant="subtle"
+							<FormControl type="text" :label="t('Patient')" v-model="transfer_patient" size="sm" variant="subtle"
 								:disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Patient ID" v-model="transfer_patient_id" size="sm"
+							<FormControl type="text" :label="t('Patient ID')" v-model="transfer_patient_id" size="sm"
 								variant="subtle" :disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="IPD No" v-model="transfer_ipd" size="sm"
+							<FormControl type="text" :label="t('IPD No')" v-model="transfer_ipd" size="sm"
 								variant="subtle" :disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Leave From"
+							<FormControl type="text" :label="t('Leave From')"
 								v-model="transfer_leave_from" size="sm" variant="subtle" :disabled="true" />
 						</div>
 					</div>
 					<div class="grid grid-cols-3 gap-2 py-4">
 						<div class="py-1 w-full">
-							<FormControl type="autocomplete" :options="type_options" label="Transfer Bed Type"
+							<FormControl type="autocomplete" :options="type_options" :label="t('Transfer Bed Type')"
 								v-model="transfer_bed_type" size="sm" variant="subtle" :disabled="true" :required="true" />
 							<ErrorMessage v-if="errors.transfer_bed_type"
 								:message="errors.transfer_bed_type" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="autocomplete" :options="transfer_rooms_options" label="Transfer To"
+							<FormControl type="autocomplete" :options="transfer_rooms_options" :label="t('Transfer To')"
 								v-model="transfer_bed" size="sm" variant="subtle" :disabled="true" :required="true" />
 							<ErrorMessage v-if="errors.transfer_bed"
 								:message="errors.transfer_bed" />
@@ -427,7 +427,7 @@
 				</div>
 			</template>
 			<template #actions>
-				<Button :loading="admission_loader" :disabled="admission_loader" variant="solid" @click="transfer_patient_bed()">Transfer Patient</Button>
+					<Button :loading="admission_loader" :disabled="admission_loader" variant="solid" @click="transfer_patient_bed()">{{ t('Transfer Patient') }}</Button>
 			</template>
 		</Dialog>
 
@@ -439,29 +439,29 @@
 			},
 		}">
 			<template #body-title>
-				<h3 class="font-bold">Confirm</h3>
+				<h3 class="font-bold">{{ t('Confirm') }}</h3>
 			</template>
 			<template #body-content>
 				<div class="mb-4">
 					<div class="flex gap-2 mb-4">
-						<p>Are you sure you want to admit this patient?</p>
+						<p>{{ t('Are you sure you want to admit this patient?') }}</p>
 					</div>
 					<div class="grid grid-cols-2 gap-2">
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Patient" v-model="admit_patient_name" size="sm"
+							<FormControl type="text" :label="t('Patient')" v-model="admit_patient_name" size="sm"
 								variant="subtle" :disabled="true" />
 						</div>
 						<div class="py-1 w-full">
-							<FormControl type="text" label="Room" v-model="admit_su_name" size="sm" variant="subtle"
+							<FormControl type="text" :label="t('Room')" v-model="admit_su_name" size="sm" variant="subtle"
 								:disabled="true" />
 						</div>
 						<div class="py-1 w-full">
 							<DateTimePicker
 								v-model="admit_checkin"
 								variant="subtle"
-								placeholder="Checkin"
+								:placeholder="t('Checkin')"
 								:disabled="false"
-								label="Checkin"
+								:label="t('Checkin')"
 							/>
 						</div>
 					</div>
@@ -471,13 +471,13 @@
 				</div>
 			</template>
 			<template #actions>
-				<Button :loading="admission_loader" :disabled="admission_loader" variant="solid" @click="admit_patient.submit(), admission_loader=true">Confirm</Button>
+					<Button :loading="admission_loader" :disabled="admission_loader" variant="solid" @click="admit_patient.submit(), admission_loader=true">{{ t('Confirm') }}</Button>
 			</template>
 		</Dialog>
 
 		<Dialog :options="{
-			title: 'Confirm',
-			message: 'Click confirm to go to Home page',
+			title: t('Confirm'),
+			message: t('Click confirm to go to Home page'),
 			size: 'xl',
 			icon: {
 				name: 'alert-triangle',
@@ -485,14 +485,14 @@
 			},
 			actions: [
 				{
-					label: 'Confirm',
+					label: t('Confirm'),
 					variant: 'solid',
 					onClick: () => {
 						return go_to_desk_page();
 					},
 				},
 				{
-					label: 'Cancel',
+					label: t('Cancel'),
 					onClick: () => {
 						return confirm_to_desk_dialog = false;
 					},
@@ -537,7 +537,7 @@
 </script>
 
 <script setup>
-	import { ref, watch } from "vue";
+	import { computed, ref, watch } from "vue";
 	import {
 		createResource,
 		Tooltip,
@@ -552,6 +552,7 @@
 	} from "frappe-ui";
 	import { getFormat } from '@/utils'
 	import { Bed } from 'lucide-vue-next'
+	import { bedManagementTranslation as t } from '@/translation'
 
 	// master options
 	let service_unit_options = ref([]);
@@ -564,6 +565,12 @@
 	let allocate_rooms_options = ref([]);
 	let transfer_rooms_options = ref([]);
 	let room_status_options = ref([]);
+	const translated_room_status_options = computed(() =>
+		room_status_options.value.map(option => ({
+			...option,
+			label: option.label ? t(option.label) : option.label,
+		}))
+	);
 
 	// filter fields
 	let bed_filter = ref("");
@@ -650,8 +657,8 @@
 			}
 		},
 		onError: (error) => {
-			dialog_message = error.messages?.[0] || error;
-			dialog_title = "Filter Data Fetching Failed";
+			dialog_message.value = error.messages?.[0] || error;
+			dialog_title.value = t("Filter Data Fetching Failed");
 			alert_dialog.value = true;
 		},
 	});
@@ -673,8 +680,8 @@
 			item_list.value = response || [];
 		},
 		onError(error) {
-			dialog_message = error;
-			dialog_title = "Rooms Fetching Failed";
+			dialog_message.value = error.messages?.[0] || error;
+			dialog_title.value = t("Rooms Fetching Failed");
 			alert_dialog.value = true;
 		}
 	});
@@ -733,7 +740,11 @@
 			const admission_ordered_date = new Date(admission_ordered_for);
 
 			if (selectedBed.value.admission_ordered_for && admission_ordered_date < exp_discharge) {
-				errors.value.allocation_error = `Length of stay overlaps with IP Record ${ip_record} ordered for Date: ${admission_ordered_for}`
+				errors.value.allocation_error = t(
+					"Length of stay overlaps with IP Record {0} ordered for Date: {1}",
+					ip_record,
+					admission_ordered_for,
+				)
 				can_admit.value = true;
 			} else {
 				errors.value.allocation_error = ""
@@ -757,8 +768,8 @@
 				}
 			},
 			onError: (error) => {
-				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Rooms Fetching Failed";
+				dialog_message.value = error.messages?.[0] || error;
+				dialog_title.value = t("Rooms Fetching Failed");
 				alert_dialog.value = true;
 			},
 		});
@@ -811,8 +822,8 @@
 			selectedBed.value = {};
 			errors.value.admit_error = "";
 			admit_confirm.value =false;
-			dialog_message = "Patient Admitted Successfully";
-			dialog_title = "Admitted successfully";
+			dialog_message.value = t("Patient Admitted Successfully");
+			dialog_title.value = t("Admitted successfully");
 			success_dialog.value = true;
 		},
 		onError(error) {
@@ -836,14 +847,14 @@
 				if (response) {
 					selectedBed.value = {};
 					get_room_details.reload();
-					dialog_message = "Room status changed to " + status;
-					dialog_title = "Room status changed successfully";
+					dialog_message.value = t("Room status changed to {0}", t(status));
+					dialog_title.value = t("Room status changed successfully");
 					success_dialog.value = true;
 				}
 			},
 			onError: (error) => {
-				dialog_message = error.messages?.[0] || error;
-				dialog_title = "Status change failed";
+				dialog_message.value = error.messages?.[0] || error;
+				dialog_title.value = t("Status change failed");
 				alert_dialog.value = true;
 			},
 		});
@@ -896,8 +907,12 @@
 						allocate_bed_dialog.value = false;
 						selectedBed.value = {};
 						get_room_details.reload();
-						dialog_message = `Admission schedulled for patient ${allocate_patient.value.label}. Inpatient Record No: ${response}`;
-						dialog_title = "Admission Schedulled";
+						dialog_message.value = t(
+						"Admission schedulled for patient {0}. Inpatient Record No: {1}",
+						allocate_patient.value.label,
+						response,
+						);
+						dialog_title.value = t("Admission Schedulled");
 						success_dialog.value = true;
 					}
 				}
@@ -908,22 +923,22 @@
 		});
 
 		if (!allocate_patient.value) {
-			errors.value.allocate_patient = "This field is required";
+			errors.value.allocate_patient = t("This field is required");
 		} else {
 			errors.value.allocate_patient = "";
 		}
 		if (!allocate_admission_date.value) {
-			errors.value.allocate_admission_date = "This field is required";
+			errors.value.allocate_admission_date = t("This field is required");
 		} else {
 			errors.value.allocate_admission_date = "";
 		}
 		if (!allocate_primary_consultant.value) {
-			errors.value.allocate_primary_consultant = "This field is required";
+			errors.value.allocate_primary_consultant = t("This field is required");
 		} else {
 			errors.value.allocate_primary_consultant = "";
 		}
 		if (!allocate_expected_length_of_stay.value > 0) {
-			errors.value.allocate_expected_length_of_stay = "This field is required";
+			errors.value.allocate_expected_length_of_stay = t("This field is required");
 		} else {
 			errors.value.allocate_expected_length_of_stay = "";
 		}
@@ -955,8 +970,8 @@
 						transfer_bed_dialog.value = false;
 						selectedBed.value = {};
 						get_room_details.reload();
-						dialog_message = `Patient has transferred to ${transfer_bed.value.label}`;
-						dialog_title = "Patient Transfer Successfull";
+						dialog_message.value = t("Patient has transferred to {0}", transfer_bed.value.label);
+						dialog_title.value = t("Patient Transfer Successfull");
 						success_dialog.value = true;
 					}
 				}
@@ -968,12 +983,12 @@
 		});
 
 		if (!transfer_bed_type.value) {
-			errors.value.transfer_bed_type = "This field is required";
+			errors.value.transfer_bed_type = t("This field is required");
 		} else {
 			errors.value.transfer_bed_type = "";
 		}
 		if (!transfer_bed.value) {
-			errors.value.transfer_bed = "This field is required";
+			errors.value.transfer_bed = t("This field is required");
 		} else {
 			errors.value.transfer_bed = "";
 		}
