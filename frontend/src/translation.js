@@ -36,6 +36,13 @@ export function bedManagementTranslation(message, ...replacements) {
 export function kioskTranslation(message, language = 'en', ...replacements) {
 	const selected = language?.toLowerCase().split('-')[0]
 	const effective = globalThis.window?.language?.toLowerCase().split('-')[0]
+	const clinicCatalog = selected === 'es' ? globalThis.window?.clinic_kiosk_translations : null
+	const clinicMessage = clinicCatalog?.[`${message}:${KIOSK_CONTEXT}`]
+	if (clinicMessage) {
+		return clinicMessage.replace(/\{(\d+)\}/g, (placeholder, index) =>
+			replacements[Number(index)] ?? placeholder
+		)
+	}
 	if (selected && selected !== 'en' && selected === effective) {
 		return translate(message, replacements, KIOSK_CONTEXT)
 	}
