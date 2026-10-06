@@ -93,6 +93,7 @@
 	import SearchFilters from '@/components/SearchFilters.vue'
 	import WaitlistTabs from '@/components/WaitlistTabs.vue'
 	import { createResource } from "frappe-ui"
+	import { getLocalDateValue } from '@/appointmentFilters'
 
 	const search = ref("");
 	const patient_search = ref("");
@@ -101,7 +102,7 @@
 	const practitioner = ref("");
 	const visitType = ref("");
 	const sort_by = ref("Appointment Time");
-	const dateValue = ref(new Date().toISOString().split('T')[0]);
+	const dateValue = ref(getLocalDateValue());
 	let dialog_message = ref("");
 	let dialog_title = ref("");
 	let default_appointment_type = ref("");
@@ -210,7 +211,7 @@
 			}
 
 			searchOptions.value = response["All"].map((search) => ({
-				label: search.title,
+				label: search.name,
 				value: search.name
 			}));
 		},
@@ -256,7 +257,7 @@
 
 	function onBookClick() {
 		defaults["patient"] = patient_search?.value || {};
-		defaults["date"] = dateValue?.value || new Date().toISOString().split('T')[0];
+		defaults["date"] = dateValue?.value || getLocalDateValue();
 		defaults["practitioner"] = practitioner?.value || {};
 		defaults["appointment_type"] = visitType?.value || default_appointment_type.value;
 
