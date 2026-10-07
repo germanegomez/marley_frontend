@@ -10,20 +10,24 @@ export function getLocalDateValue(date = new Date()) {
 
 export function formatAppointmentFilterDate(
 	value,
+	formatDate,
 	translate = (message) => message,
 	today = getLocalDateValue(),
 ) {
 	if (!value) return ''
 
 	const match = String(value).match(DATE_ONLY_PATTERN)
-	if (!match) return ''
+	if (!match || typeof formatDate !== 'function') return ''
 
 	const [, year, month, day] = match
-	const shortDate = `${day}/${month}`
-	if (`${year}-${month}-${day}` === today) {
-		return translate('Today · {0}', shortDate)
+	const technicalDate = `${year}-${month}-${day}`
+	const visibleDate = formatDate(technicalDate)
+	if (!visibleDate) return ''
+
+	if (technicalDate === today) {
+		return translate('Today · {0}', visibleDate)
 	}
-	return `${shortDate}/${year}`
+	return visibleDate
 }
 
 export function appointmentSortOptions(translate = (message) => message) {

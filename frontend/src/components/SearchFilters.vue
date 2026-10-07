@@ -142,6 +142,7 @@
 	import { createResource, FormControl, DatePicker } from 'frappe-ui'
 	import AccessibleFilterAutocomplete from '@/components/AccessibleFilterAutocomplete.vue'
 	import { appointmentDeskTranslation as t } from '@/translation'
+	import { getFormat } from '@/utils'
 	import {
 		appointmentSortOptions,
 		formatAppointmentFilterDate,
@@ -171,7 +172,13 @@
 	const practitionerOptions = ref([])
 	const departmentOptions = ref([])
 	const visitypeOptions = ref([])
-	const formattedDate = computed(() => formatAppointmentFilterDate(dateValue.value, t))
+	const formattedDate = computed(() =>
+		formatAppointmentFilterDate(
+			dateValue.value,
+			(date) => getFormat(date, '', true),
+			t,
+		),
+	)
 
 	let patients = createResource({
 		url: '/api/method/marley_frontend.waitlist.get_patients',

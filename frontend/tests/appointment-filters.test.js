@@ -7,17 +7,34 @@ import {
 	getLocalDateValue,
 } from '../src/appointmentFilters.js'
 
-test('formats technical dates for people without changing their value', () => {
+test('delegates visible dates to the configured Frappe formatter', () => {
 	const translate = (message, value) => message.replace('{0}', value)
+	const receivedValues = []
+	const formatDate = (value) => {
+		receivedValues.push(value)
+		return value === '2026-10-06' ? '06/10/2026' : '10-07-2026'
+	}
 	assert.equal(
-		formatAppointmentFilterDate('2026-10-06', translate, '2026-10-06'),
-		'Today · 06/10',
+		formatAppointmentFilterDate(
+			'2026-10-06',
+			formatDate,
+			translate,
+			'2026-10-06',
+		),
+		'Today · 06/10/2026',
 	)
 	assert.equal(
-		formatAppointmentFilterDate('2026-10-07', translate, '2026-10-06'),
-		'07/10/2026',
+		formatAppointmentFilterDate(
+			'2026-10-07',
+			formatDate,
+			translate,
+			'2026-10-06',
+		),
+		'10-07-2026',
 	)
-	assert.equal(formatAppointmentFilterDate('not-a-date', translate), '')
+	assert.deepEqual(receivedValues, ['2026-10-06', '2026-10-07'])
+	assert.equal(formatAppointmentFilterDate('not-a-date', formatDate, translate), '')
+	assert.equal(formatAppointmentFilterDate('2026-10-06'), '')
 })
 
 test('builds a local date-only backend value without a UTC conversion', () => {
@@ -59,4 +76,5 @@ test('declares compact, responsive and accessible filter controls', () => {
 	assert.match(source, /aria-label=/)
 	assert.match(source, /<fieldset/)
 	assert.match(source, /type="tel"/)
+	assert.match(source, /getFormat\(date, '', true\)/)
 })
