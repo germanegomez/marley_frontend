@@ -6,6 +6,7 @@ import {
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationFieldValue,
+	registrationFieldsForSection,
 	registrationUrl,
 	resolveRegisteredPatient,
 } from "../src/patientRegistration.js";
@@ -95,6 +96,25 @@ test("derived extension values are evaluated but need not be submitted", () => {
 	assert.equal(registrationFieldValue({name: "start"}, values), 7);
 });
 
+test("declarative fields can target native form sections without domain knowledge", () => {
+	const extension = {
+		fields: [
+			{name: "account_code"},
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+	};
+	assert.deepEqual(
+		registrationFieldsForSection(extension).map(field => field.name),
+		["account_code"],
+	);
+	assert.deepEqual(
+		registrationFieldsForSection(extension, "address").map(field => field.name),
+		["district"],
+	);
+	assert.deepEqual(registrationFieldsForSection(null, "address"), []);
+});
+
 test("the native component does not own product-specific field definitions", () => {
 	const component = readFileSync(
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
@@ -112,6 +132,11 @@ test("configurable built-in fields expose stable hooks and a visible birth-date 
 	);
 	assert.match(component, /data-registration-built-in-field="age"/);
 	assert.match(component, /data-registration-built-in-field="dob"/);
+	for (const field of ["addressLine1", "addressLine2", "city", "state", "zip"]) {
+		assert.match(component, new RegExp(`data-registration-built-in-field="${field}"`));
+	}
+	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
+	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
 	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
 });
 

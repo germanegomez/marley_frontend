@@ -17,6 +17,12 @@ export function registrationFieldValue(field, values, context = {}) {
 	return values[field?.name];
 }
 
+export function registrationFieldsForSection(extension, section = "registration") {
+	return (extension?.fields || []).filter(
+		(field) => (field.section || "registration") === section,
+	);
+}
+
 export function buildPatientRegistrationParams(
 	values,
 	extension = null,
