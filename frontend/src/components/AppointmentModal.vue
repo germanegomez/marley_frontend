@@ -79,14 +79,15 @@
 			</div>
 
 			<!-- Registration fields -->
-			<div v-if="is_new_patient">
-				<div class="grid grid-cols-3 gap-2 pb-2">
+			<div v-if="is_new_patient" data-patient-registration-form>
+				<div class="grid grid-cols-3 gap-2 pb-2" data-patient-registration-grid>
 					<div class="py-1 w-full">
 						<FormControl type="text" variant="subtle" :label="t('First Name')" v-model="reg_firstName" :required="true" />
 						<ErrorMessage v-if="errors.firstName" :message="errors.firstName"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" :label="t('Last Name')" v-model="reg_lastName" />
+						<FormControl type="text" variant="subtle" :label="t('Last Name')" v-model="reg_lastName" :required="registrationBuiltInRequired('lastName')" />
+						<ErrorMessage v-if="errors.lastName" :message="errors.lastName"/>
 					</div>
 					<div class="py-1 w-full">
 						<FormControl type="text" variant="subtle" :label="t('Contact Number')" v-model="reg_contactNumber" :required="true" />
@@ -100,20 +101,48 @@
 						<ErrorMessage v-if="errors.gender" :message="errors.gender"/>
 					</div>
 					<div class="py-1 w-full">
-						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')" :placeholder="t('Marital Status')"/>
+						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')" :placeholder="t('Marital Status')" :required="registrationBuiltInRequired('maritalStatus')"/>
+						<ErrorMessage v-if="errors.maritalStatus" :message="errors.maritalStatus"/>
 					</div>
-					<div class="py-1 w-full">
-						<FormControl type="number" v-model="reg_age" :label="t('Age')"/>
+					<div v-if="registrationBuiltInVisible('age')" class="py-1 w-full">
+						<FormControl
+							type="number"
+							:modelValue="registrationBuiltInValue('age', reg_age)"
+							@update:modelValue="value => setRegistrationBuiltInValue('age', reg_age, value)"
+							:label="t('Age')"
+							:disabled="registrationBuiltInDisabled('age')"
+						/>
 					</div>
-					<div class="py-1 w-full">
+					<div v-if="registrationBuiltInVisible('dob')" class="py-1 w-full">
 						<DatePicker
 							v-model="reg_dob"
 							variant="subtle"
 							:placeholder="t('Date of Birth')"
 							:disabled="false"
 							:label="t('Date of Birth')"
+							:required="registrationBuiltInRequired('dob')"
 							:formatter="(date) => getFormat(date, '', true)"
 						/>
+						<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
+					</div>
+					<div
+						v-for="field in registrationExtension?.fields || []"
+						:key="field.name"
+						class="py-1 w-full"
+						:data-registration-extension-field="field.name"
+					>
+						<FormControl
+							:type="field.type || 'text'"
+							:modelValue="registrationExtensionFieldValue(field)"
+							@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+							:options="registrationExtensionFieldOptions(field)"
+							variant="subtle"
+							:label="t(field.label || field.name)"
+							:placeholder="registrationExtensionFieldPlaceholder(field)"
+							:required="Boolean(field.required)"
+							:disabled="Boolean(field.disabled || field.derive)"
+						/>
+						<ErrorMessage v-if="errors[`extension_${field.name}`]" :message="errors[`extension_${field.name}`]"/>
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
@@ -183,9 +212,16 @@
 
 <script setup>
 	import { appointmentDeskTranslation as t } from '@/translation'
-	import { ref, watch } from 'vue'
+	import { reactive, ref, watch } from 'vue'
 	import { createResource, Switch, DatePicker, ErrorMessage } from "frappe-ui"
 	import { getFormat } from '@/utils'
+	import {
+		buildPatientRegistrationParams,
+		getPatientRegistrationExtension,
+		registrationFieldValue,
+		registrationUrl,
+		resolveRegisteredPatient,
+	} from '@/patientRegistration'
 
 	const props = defineProps({
 		defaults: Object,
@@ -202,7 +238,7 @@
 	let booking_loader = ref(false);
 
 	const selectedSlot = ref(null);
-	const reg_age = ref(null);
+	const registrationExtension = getPatientRegistrationExtension(window);
 
 	let dialog_message = ref("");
 	let dialog_title = ref("");
@@ -214,6 +250,7 @@
 	const reg_gender = ref("");
 	const reg_dob = ref("");
 	const reg_marital_status = ref("");
+	const reg_age = ref(null);
 	const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widow'].map(value => ({
 		label: t(value),
 		value,
@@ -234,6 +271,8 @@
 	const source_options = ref([]);
 	const employee_options = ref([]);
 	const slots = ref([]);
+	const registrationExtensionOptions = ref({});
+	const registrationExtensionValues = reactive({});
 
 	let errors = ref({});
 	const book_patient = ref(props.defaults.patient) || ref({});
@@ -247,36 +286,110 @@
 		emit('appointment_booked')
 	}
 
+	function registrationBuiltInConfig(name) {
+		return registrationExtension?.builtInFields?.[name] || {};
+	}
+
+	function registrationBuiltInVisible(name) {
+		return !registrationBuiltInConfig(name).hidden;
+	}
+
+	function registrationBuiltInRequired(name) {
+		return Boolean(registrationBuiltInConfig(name).required);
+	}
+
+	function registrationBuiltInDisabled(name) {
+		const config = registrationBuiltInConfig(name);
+		return Boolean(config.disabled || config.derive);
+	}
+
+	function registrationBuiltInValues() {
+		return {
+			firstName: reg_firstName.value,
+			lastName: reg_lastName.value,
+			contactNumber: reg_contactNumber.value,
+			email: reg_email.value,
+			gender: reg_gender.value,
+			dob: reg_dob.value,
+			age: reg_age.value,
+			maritalStatus: reg_marital_status.value,
+		};
+	}
+
+	function registrationDeriveContext() {
+		return { options: registrationExtensionOptions.value };
+	}
+
+	function registrationBuiltInValue(name, valueRef) {
+		const config = registrationBuiltInConfig(name);
+		if (typeof config.derive === 'function') {
+			return config.derive(registrationBuiltInValues(), registrationDeriveContext());
+		}
+		return valueRef.value;
+	}
+
+	function setRegistrationBuiltInValue(name, valueRef, value) {
+		if (!registrationBuiltInConfig(name).derive) valueRef.value = value;
+	}
+
+	function registrationExtensionFieldOptions(field) {
+		const values = field.options || registrationExtensionOptions.value[field.optionsKey] || [];
+		return values.map(value => (
+			typeof value === 'object' ? value : { label: t(value), value }
+		));
+	}
+
+	function registrationExtensionFieldPlaceholder(field) {
+		const placeholder = registrationExtensionOptions.value[field.placeholderKey]
+			|| field.placeholder
+			|| field.label
+			|| field.name;
+		return t(placeholder);
+	}
+
+	function registrationExtensionFieldValue(field) {
+		return registrationFieldValue(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
+	}
+
+	function setRegistrationExtensionFieldValue(field, value) {
+		if (!field.derive) registrationExtensionValues[field.name] = value;
+	}
+
 	let patient_registration = async () => {
 		let create_patient = createResource({
-			url: "/api/method/marley_frontend.waitlist.patient_registration",
+			url: registrationUrl(registrationExtension),
 			method: "POST",
 			makeParams() {
-				return {
-					first_name: reg_firstName.value,
-					last_name: reg_lastName.value,
-					gender: reg_gender?.value || null,
-					mobile: reg_contactNumber.value,
+				return buildPatientRegistrationParams({
+					firstName: reg_firstName.value,
+					lastName: reg_lastName.value,
+					gender: reg_gender.value,
+					contactNumber: reg_contactNumber.value,
 					email: reg_email.value,
 					dob: reg_dob.value,
-					marital_status: reg_marital_status.value,
+					maritalStatus: reg_marital_status.value,
 					addressLine1: reg_addressLine1.value,
 					addressLine2: reg_addressLine2.value,
 					city: reg_city.value,
 					state: reg_state.value,
 					zip: reg_zip.value,
-					source: reg_source?.value || null,
-					employee: reg_employee.value?.value || null,
-				};
+					source: reg_source.value,
+					employee: reg_employee.value,
+				}, registrationExtension, registrationExtensionValues);
 			},
 			onSuccess(response) {
-				if (response.status == "success") {
+				const patient = resolveRegisteredPatient(response);
+				if (patient) {
 					patients.fetch();
 					registration_loader.value = false;
 					errors.value.registration_error = "";
 					is_new_patient.value = false;
-					book_patient.value = { label: response.label, value: response.value, image: response.image };
-					book_patient_id.value = response.value;
+					book_patient.value = patient;
+					book_patient_id.value = patient.value;
 				} else {
 					registration_loader.value = false;
 					errors.value.registration_error = response;
@@ -303,7 +416,30 @@
 		} else {
 			errors.value.gender = "";
 		}
-		if (!reg_firstName.value || !reg_contactNumber.value || !reg_gender.value) {
+		let builtInMissing = false;
+		for (const [name, value] of [
+			['lastName', reg_lastName.value],
+			['maritalStatus', reg_marital_status.value],
+			['dob', reg_dob.value],
+		]) {
+			const missing = registrationBuiltInRequired(name) && !value;
+			errors.value[name] = missing ? t('This field is required') : '';
+			builtInMissing ||= missing;
+		}
+		let extensionMissing = false;
+		for (const field of registrationExtension?.fields || []) {
+			const value = registrationExtensionFieldValue(field);
+			const missing = field.required && (value === null || value === undefined || value === '');
+			errors.value[`extension_${field.name}`] = missing ? t('This field is required') : '';
+			extensionMissing ||= missing;
+		}
+		if (
+			!reg_firstName.value
+			|| !reg_contactNumber.value
+			|| !reg_gender.value
+			|| builtInMissing
+			|| extensionMissing
+		) {
 			return
 		} else {
 			registration_loader.value = true;
@@ -402,6 +538,28 @@
 	});
 	genders.fetch();
 
+	if (registrationExtension) {
+		const registrationOptions = createResource({
+			url: registrationExtension.optionsUrl,
+			method: "GET",
+			onSuccess(response) {
+				registrationExtensionOptions.value = response || {};
+				for (const field of registrationExtension.fields) {
+					const options = registrationExtensionFieldOptions(field);
+					if (field.default !== undefined) {
+						registrationExtensionValues[field.name] = field.default;
+					} else if (field.defaultFromSingleOption && options.length === 1) {
+						registrationExtensionValues[field.name] = options[0].value;
+					}
+				}
+			},
+			onError(error) {
+				errors.value.registration_error = error;
+			},
+		});
+		registrationOptions.fetch();
+	}
+
 	const { fetch } = createResource({
 		url: "/api/method/marley_frontend.waitlist.get_masters",
 		method: "GET",
@@ -449,15 +607,6 @@
 			errors.value.practitioner = t('This field is required');
 		} else {
 			errors.value.practitioner = null;
-		}
-	});
-
-	watch(reg_age, (age) => {
-		if (age) {
-			const today = new Date();
-			let birthYear = today.getFullYear() - age-1;
-			const birthDate = new Date(birthYear, today.getMonth(), today.getDate());
-			reg_dob.value = birthDate.toISOString().split('T')[0];
 		}
 	});
 
