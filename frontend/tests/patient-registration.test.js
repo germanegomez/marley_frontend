@@ -105,6 +105,16 @@ test("the native component does not own product-specific field definitions", () 
 	}
 });
 
+test("configurable built-in fields expose stable hooks and a visible birth-date label", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(component, /data-registration-built-in-field="age"/);
+	assert.match(component, /data-registration-built-in-field="dob"/);
+	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
+});
+
 test("both a newly created and an existing patient continue through the native modal", () => {
 	assert.deepEqual(resolveRegisteredPatient({
 		patient: "CCC-PAC-2026-00001",

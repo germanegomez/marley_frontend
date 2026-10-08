@@ -104,7 +104,11 @@
 						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')" :placeholder="t('Marital Status')" :required="registrationBuiltInRequired('maritalStatus')"/>
 						<ErrorMessage v-if="errors.maritalStatus" :message="errors.maritalStatus"/>
 					</div>
-					<div v-if="registrationBuiltInVisible('age')" class="py-1 w-full">
+					<div
+						v-if="registrationBuiltInVisible('age')"
+						class="py-1 w-full"
+						data-registration-built-in-field="age"
+					>
 						<FormControl
 							type="number"
 							:modelValue="registrationBuiltInValue('age', reg_age)"
@@ -113,16 +117,25 @@
 							:disabled="registrationBuiltInDisabled('age')"
 						/>
 					</div>
-					<div v-if="registrationBuiltInVisible('dob')" class="py-1 w-full">
-						<DatePicker
-							v-model="reg_dob"
-							variant="subtle"
-							:placeholder="t('Date of Birth')"
-							:disabled="false"
-							:label="t('Date of Birth')"
-							:required="registrationBuiltInRequired('dob')"
-							:formatter="(date) => getFormat(date, '', true)"
-						/>
+					<div
+						v-if="registrationBuiltInVisible('dob')"
+						class="py-1 w-full"
+						data-registration-built-in-field="dob"
+					>
+						<label class="mb-1.5 block text-xs text-ink-gray-5">
+							<span>
+								{{ t('Date of Birth') }}
+								<span v-if="registrationBuiltInRequired('dob')" class="text-ink-red-3"> *</span>
+							</span>
+							<DatePicker
+								v-model="reg_dob"
+								variant="subtle"
+								:placeholder="t('Date of Birth')"
+								:disabled="false"
+								:required="registrationBuiltInRequired('dob')"
+								:formatter="(date) => getFormat(date, '', true)"
+							/>
+						</label>
 						<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
 					</div>
 					<div
