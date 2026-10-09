@@ -7,6 +7,17 @@ import {
 	buildPatientAppointmentParams,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
+	registrationActionDependsOn,
+	registrationActionError,
+	registrationActionFingerprint,
+	registrationActionParams,
+	registrationActionReady,
+	registrationActionResultIsCurrent,
+	registrationActionResultRows,
+	registrationActionShouldStart,
+	registrationActions,
+	registrationActionsForField,
+	registrationActionUpdates,
 	registrationFieldDisabled,
 	registrationFieldOptions,
 	registrationFieldRequired,
@@ -18,6 +29,98 @@ import {
 	registrationUrl,
 	resolveRegisteredPatient,
 } from "../src/patientRegistration.js";
+
+test("declarative actions select explicit triggers and dependencies", () => {
+	const extension = {
+		actions: [
+			{
+				name: "lookup",
+				url: "/lookup",
+				dependsOn: ["kind", "code"],
+				trigger: { fields: ["code"], events: ["blur", "confirm"] },
+			},
+			{ name: "invalid-without-url" },
+		],
+	};
+	assert.deepEqual(registrationActions(extension).map(action => action.name), ["lookup"]);
+	assert.equal(registrationActionDependsOn(extension.actions[0], "kind"), true);
+	assert.equal(registrationActionDependsOn(extension.actions[0], "other"), false);
+	assert.deepEqual(
+		registrationActionsForField(extension, "code", "blur").map(action => action.name),
+		["lookup"],
+	);
+	assert.deepEqual(registrationActionsForField(extension, "code", "change"), []);
+});
+
+test("declarative actions build stable requests and apply configured responses", () => {
+	const action = {
+		name: "lookup",
+		url: "/lookup",
+		dependsOn: ["kind", "code"],
+		when: values => Boolean(values.kind && values.code),
+		fingerprint: values => `${values.kind.value}:${values.code}`,
+		params: (values, context) => ({
+			kind: values.kind.value,
+			code: values.code,
+			tenant: context.options.tenant,
+		}),
+		applyResponse: response => ({ resolved_name: response.name }),
+		result: {
+			rows: [
+				{ label: "Status", value: "status" },
+				{ label: "Name", value: response => response.name },
+				{ label: "Hidden", value: "hidden", visible: false },
+			],
+		},
+	};
+	const values = { kind: { label: "Member", value: "member" }, code: "A-1" };
+	const context = { options: { tenant: "north" } };
+	assert.equal(registrationActionReady(action, values, context), true);
+	assert.equal(registrationActionFingerprint(action, values, context), "member:A-1");
+	assert.deepEqual(registrationActionParams(action, values, context), {
+		kind: "member",
+		code: "A-1",
+		tenant: "north",
+	});
+	assert.deepEqual(
+		registrationActionUpdates(action, { name: "Resolved" }, values, context),
+		{ resolved_name: "Resolved" },
+	);
+	assert.deepEqual(
+		registrationActionResultRows(
+			action,
+			{ status: "ok", name: "Resolved", hidden: "secret" },
+			values,
+			context,
+		),
+		[
+			{ label: "Status", value: "ok" },
+			{ label: "Name", value: "Resolved" },
+		],
+	);
+});
+
+test("declarative action defaults are deterministic and errors are safe text", () => {
+	const action = { name: "lookup", url: "/lookup", dependsOn: ["kind", "code"] };
+	const values = { kind: { value: "member" }, code: "A-1" };
+	assert.equal(registrationActionFingerprint(action, values), '["member","A-1"]');
+	assert.deepEqual(registrationActionParams(action, values), {
+		kind: "member",
+		code: "A-1",
+	});
+	assert.equal(registrationActionError({ messages: ["Safe message"] }), "Safe message");
+	assert.equal(registrationActionError(new Error("Failure")), "Failure");
+});
+
+test("declarative actions deduplicate requests and reject stale responses", () => {
+	const pending = { fingerprint: "member:A-1", loading: true, response: null, error: "" };
+	assert.equal(registrationActionShouldStart(pending, "member:A-1"), false);
+	assert.equal(registrationActionShouldStart(pending, "member:A-2"), true);
+	assert.equal(registrationActionShouldStart({}, ""), false);
+	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-1"), true);
+	assert.equal(registrationActionResultIsCurrent(5, 4, "member:A-1", "member:A-1"), false);
+	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-2"), false);
+});
 
 test("the optional registration extension is explicit and complete", () => {
 	assert.equal(getPatientRegistrationExtension({}), null);

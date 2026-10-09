@@ -58,6 +58,82 @@ export function registrationFieldOptions(field, values, context = {}) {
 	return context.options?.[field?.optionsKey] || [];
 }
 
+export function registrationActions(extension) {
+	return Array.isArray(extension?.actions)
+		? extension.actions.filter(action => action?.name && action?.url)
+		: [];
+}
+
+export function registrationActionDependsOn(action, fieldName) {
+	const dependencies = action?.dependsOn || action?.trigger?.fields || [];
+	return dependencies.includes(fieldName);
+}
+
+export function registrationActionsForField(extension, fieldName, event = "change") {
+	return registrationActions(extension).filter(action => {
+		const events = action.trigger?.events || ["change"];
+		return events.includes(event) && (action.trigger?.fields || []).includes(fieldName);
+	});
+}
+
+export function registrationActionReady(action, values, context = {}) {
+	return Boolean(evaluateSetting(action?.when, values, context, true));
+}
+
+export function registrationActionFingerprint(action, values, context = {}) {
+	if (typeof action?.fingerprint === "function") {
+		const configured = action.fingerprint(values, context);
+		return configured === null || configured === undefined ? "" : String(configured);
+	}
+	const dependencies = action?.dependsOn || action?.trigger?.fields || [];
+	return JSON.stringify(dependencies.map(name => valueOf(values[name])));
+}
+
+export function registrationActionParams(action, values, context = {}) {
+	if (typeof action?.params === "function") return action.params(values, context) || {};
+	const dependencies = action?.dependsOn || action?.trigger?.fields || [];
+	return Object.fromEntries(dependencies.map(name => [name, valueOf(values[name])]));
+}
+
+export function registrationActionUpdates(action, response, values, context = {}) {
+	if (typeof action?.applyResponse !== "function") return {};
+	const updates = action.applyResponse(response, values, context);
+	return updates && typeof updates === "object" ? updates : {};
+}
+
+export function registrationActionResultRows(action, response, values, context = {}) {
+	return (action?.result?.rows || [])
+		.filter(row => Boolean(evaluateSetting(row.visible, values, context, true)))
+		.map(row => ({
+			label: row.label || row.name || "",
+			value: typeof row.value === "function"
+				? row.value(response, values, context)
+				: response?.[row.value || row.name],
+		}));
+}
+
+export function registrationActionError(error) {
+	if (!error) return "";
+	return error.messages?.[0] || error.message || String(error);
+}
+
+export function registrationActionShouldStart(state, fingerprint) {
+	if (!fingerprint) return false;
+	return !(
+		state?.fingerprint === fingerprint
+		&& (state?.loading || state?.response || state?.error)
+	);
+}
+
+export function registrationActionResultIsCurrent(
+	stateVersion,
+	requestVersion,
+	expectedFingerprint,
+	currentFingerprint,
+) {
+	return stateVersion === requestVersion && expectedFingerprint === currentFingerprint;
+}
+
 export function buildPatientRegistrationParams(
 	values,
 	extension = null,

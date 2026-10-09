@@ -153,6 +153,7 @@
 							<DatePicker
 								:modelValue="registrationExtensionFieldValue(field)"
 								@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+								@blur="runRegistrationFieldActions(field, 'blur')"
 								variant="subtle"
 								:placeholder="registrationExtensionFieldPlaceholder(field)"
 								:required="registrationExtensionFieldRequired(field)"
@@ -165,6 +166,7 @@
 							:type="field.type || 'text'"
 							:modelValue="registrationExtensionFieldValue(field)"
 							@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+							@blur="runRegistrationFieldActions(field, 'blur')"
 							:options="registrationExtensionFieldOptions(field)"
 							variant="subtle"
 							:label="t(field.label || field.name)"
@@ -201,6 +203,7 @@
 								<DatePicker
 									:modelValue="registrationExtensionFieldValue(field)"
 									@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+									@blur="runRegistrationFieldActions(field, 'blur')"
 									variant="subtle"
 									:placeholder="registrationExtensionFieldPlaceholder(field)"
 									:required="registrationExtensionFieldRequired(field)"
@@ -213,6 +216,7 @@
 								:type="field.type || 'text'"
 								:modelValue="registrationExtensionFieldValue(field)"
 								@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+								@blur="runRegistrationFieldActions(field, 'blur')"
 								:options="registrationExtensionFieldOptions(field)"
 								variant="subtle"
 								:label="t(field.label || field.name)"
@@ -224,6 +228,44 @@
 						</div>
 					</div>
 				</template>
+				<div
+					v-for="action in registrationActions(registrationExtension)"
+					:key="action.name"
+					class="mb-3 rounded border border-outline-gray-2 p-3"
+					:data-registration-extension-action="action.name"
+				>
+					<div class="flex items-center justify-between gap-2">
+						<div>
+							<p v-if="action.label" class="text-sm font-medium text-ink-gray-8">{{ t(action.label) }}</p>
+							<p v-if="registrationActionState(action).loading" class="text-sm text-ink-gray-5">
+								{{ t(action.loadingLabel || 'Loading...') }}
+							</p>
+						</div>
+						<Button
+							v-if="action.confirmLabel"
+							:label="t(action.confirmLabel)"
+							:loading="registrationActionState(action).loading"
+							:disabled="registrationActionState(action).loading"
+							variant="subtle"
+							theme="gray"
+							@click="runRegistrationAction(action, 'confirm')"
+						/>
+					</div>
+					<ErrorMessage
+						v-if="registrationActionState(action).error"
+						:message="registrationActionState(action).error"
+					/>
+					<div v-if="registrationActionState(action).response" class="mt-2 grid grid-cols-3 gap-2">
+						<div
+							v-for="row in registrationActionRows(action)"
+							:key="row.label"
+							class="text-sm"
+						>
+							<p class="text-ink-gray-5">{{ t(row.label) }}</p>
+							<p class="text-ink-gray-8">{{ row.value }}</p>
+						</div>
+					</div>
+				</div>
 				<div class="flex gap-2 my-2">
 					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Address & Contact') }}</h4>
 				</div>
@@ -259,6 +301,7 @@
 							:type="field.type || 'text'"
 							:modelValue="registrationExtensionFieldValue(field)"
 							@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+							@blur="runRegistrationFieldActions(field, 'blur')"
 							:options="registrationExtensionFieldOptions(field)"
 							variant="subtle"
 							:label="t(field.label || field.name)"
@@ -292,7 +335,7 @@
 			<div v-if="is_new_patient">
 				<Button
 					:loading="registration_loader"
-					:disabled="registration_loader"
+					:disabled="registration_loader || registrationActionsLoading()"
 					:variant="'solid'"
 					theme="gray"
 					:label="t('Register Patient')"
@@ -323,6 +366,17 @@
 		buildPatientAppointmentParams,
 		buildPatientRegistrationParams,
 		getPatientRegistrationExtension,
+		registrationActionDependsOn,
+		registrationActionError,
+		registrationActionFingerprint,
+		registrationActionParams,
+		registrationActionReady,
+		registrationActionResultIsCurrent,
+		registrationActionResultRows,
+		registrationActionShouldStart,
+		registrationActions,
+		registrationActionsForField,
+		registrationActionUpdates,
 		registrationFieldDisabled,
 		registrationFieldOptions,
 		registrationFieldRequired,
@@ -385,6 +439,7 @@
 	const slots = ref([]);
 	const registrationExtensionOptions = ref({});
 	const registrationExtensionValues = reactive({});
+	const registrationActionStates = reactive({});
 
 	let errors = ref({});
 	const book_patient = ref(props.defaults.patient) || ref({});
@@ -484,11 +539,18 @@
 	}
 
 	function registrationExtensionFieldDisabled(field) {
-		return registrationFieldDisabled(
+		const configured = registrationFieldDisabled(
 			field,
 			registrationExtensionValues,
 			registrationDeriveContext(),
 		);
+		const disabledByAction = registrationActions(registrationExtension).some(action => {
+			const disabledFields = action.disableWhileLoading === true
+				? action.dependsOn || action.trigger?.fields || []
+				: action.disableWhileLoading || [];
+			return registrationActionState(action).loading && disabledFields.includes(field.name);
+		});
+		return configured || disabledByAction;
 	}
 
 	function registrationExtensionFieldPlaceholder(field) {
@@ -508,7 +570,143 @@
 	}
 
 	function setRegistrationExtensionFieldValue(field, value) {
-		if (!field.derive) registrationExtensionValues[field.name] = value;
+		if (field.derive) return;
+		registrationExtensionValues[field.name] = value;
+		invalidateRegistrationActions(field.name);
+		runRegistrationFieldActions(field, 'change');
+	}
+
+	function registrationActionState(action) {
+		if (!registrationActionStates[action.name]) {
+			registrationActionStates[action.name] = {
+				version: 0,
+				loading: false,
+				fingerprint: '',
+				response: null,
+				error: '',
+			};
+		}
+		return registrationActionStates[action.name];
+	}
+
+	function registrationActionContext(action) {
+		return {
+			...registrationDeriveContext(),
+			action: {
+				name: action.name,
+				state: registrationActionState(action),
+			},
+		};
+	}
+
+	function registrationActionRows(action) {
+		const state = registrationActionState(action);
+		return registrationActionResultRows(
+			action,
+			state.response,
+			registrationExtensionValues,
+			registrationActionContext(action),
+		);
+	}
+
+	function registrationActionsLoading() {
+		return registrationActions(registrationExtension).some(
+			action => action.blockSubmit !== false && registrationActionState(action).loading,
+		);
+	}
+
+	function invalidateRegistrationActions(fieldName) {
+		for (const action of registrationActions(registrationExtension)) {
+			if (!registrationActionDependsOn(action, fieldName)) continue;
+			const state = registrationActionState(action);
+			state.version += 1;
+			state.loading = false;
+			state.fingerprint = '';
+			state.response = null;
+			state.error = '';
+			for (const name of action.clearFields || []) {
+				registrationExtensionValues[name] = '';
+			}
+		}
+	}
+
+	async function runRegistrationAction(action) {
+		const state = registrationActionState(action);
+		const context = registrationActionContext(action);
+		if (!registrationActionReady(action, registrationExtensionValues, context)) return;
+		const fingerprint = registrationActionFingerprint(
+			action,
+			registrationExtensionValues,
+			context,
+		);
+		if (!registrationActionShouldStart(state, fingerprint)) return;
+
+		const version = state.version + 1;
+		state.version = version;
+		state.loading = true;
+		state.fingerprint = fingerprint;
+		state.response = null;
+		state.error = '';
+		const params = registrationActionParams(
+			action,
+			registrationExtensionValues,
+			context,
+		);
+		const request = createResource({
+			url: action.url,
+			method: action.method || 'POST',
+			makeParams() {
+				return params;
+			},
+			onSuccess(response) {
+				const currentContext = registrationActionContext(action);
+				const currentFingerprint = registrationActionFingerprint(
+					action,
+					registrationExtensionValues,
+					currentContext,
+				);
+				if (!registrationActionResultIsCurrent(
+					state.version,
+					version,
+					fingerprint,
+					currentFingerprint,
+				)) return;
+				Object.assign(
+					registrationExtensionValues,
+					registrationActionUpdates(
+						action,
+						response,
+						registrationExtensionValues,
+						currentContext,
+					),
+				);
+				state.response = response;
+				state.loading = false;
+			},
+			onError(error) {
+				if (state.version !== version) return;
+				state.error = registrationActionError(error);
+				state.loading = false;
+			},
+		});
+		try {
+			await request.submit();
+		} catch (error) {
+			if (state.version === version && state.loading) {
+				state.error = registrationActionError(error);
+				state.loading = false;
+			}
+		}
+	}
+
+	function runRegistrationFieldActions(field, event) {
+		for (const action of registrationActionsForField(
+			registrationExtension,
+			field.name,
+			event,
+		)) {
+			runRegistrationAction(action);
+		}
 	}
 
 	let patient_registration = async () => {
