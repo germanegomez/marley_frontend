@@ -1,4 +1,5 @@
 const DEFAULT_REGISTRATION_URL = "/api/method/marley_frontend.waitlist.patient_registration";
+const DEFAULT_APPOINTMENT_URL = "/api/method/marley_frontend.waitlist.patient_appointment";
 
 export function getPatientRegistrationExtension(scope = globalThis) {
 	const extension = scope?.marleyFrontend?.patientRegistration;
@@ -12,6 +13,11 @@ function valueOf(value) {
 	return value?.value ?? value ?? null;
 }
 
+function evaluateSetting(setting, values, context, fallback) {
+	if (typeof setting === "function") return setting(values, context);
+	return setting === undefined ? fallback : setting;
+}
+
 export function registrationFieldValue(field, values, context = {}) {
 	if (typeof field?.derive === "function") return field.derive(values, context);
 	return values[field?.name];
@@ -21,6 +27,35 @@ export function registrationFieldsForSection(extension, section = "registration"
 	return (extension?.fields || []).filter(
 		(field) => (field.section || "registration") === section,
 	);
+}
+
+export function registrationSectionsForPlacement(extension, placement = "before-address") {
+	return (extension?.sections || []).filter(
+		(section) => (section.placement || "before-address") === placement,
+	);
+}
+
+export function registrationFieldVisible(field, values, context = {}) {
+	if (field?.hidden) return false;
+	return Boolean(evaluateSetting(field?.visible, values, context, true));
+}
+
+export function registrationFieldRequired(field, values, context = {}) {
+	if (!registrationFieldVisible(field, values, context)) return false;
+	return Boolean(evaluateSetting(field?.required, values, context, false));
+}
+
+export function registrationFieldDisabled(field, values, context = {}) {
+	return Boolean(
+		field?.derive
+		|| evaluateSetting(field?.disabled, values, context, false),
+	);
+}
+
+export function registrationFieldOptions(field, values, context = {}) {
+	const configured = evaluateSetting(field?.options, values, context, undefined);
+	if (configured !== undefined) return configured || [];
+	return context.options?.[field?.optionsKey] || [];
 }
 
 export function buildPatientRegistrationParams(
@@ -57,14 +92,44 @@ export function registrationUrl(extension) {
 	return extension?.submitUrl || DEFAULT_REGISTRATION_URL;
 }
 
+export function appointmentUrl(extension) {
+	return extension?.appointment?.url || DEFAULT_APPOINTMENT_URL;
+}
+
+export function registrationResponseError(response, extension = null) {
+	const key = extension?.responseErrorKey;
+	if (!key || !response || typeof response !== "object") return null;
+	return response[key] || null;
+}
+
+export function buildPatientAppointmentParams(values, extension = null, patient = null) {
+	const params = {
+		from_kiosk: false,
+		appointment_type: valueOf(values.appointmentType),
+		practitioner: valueOf(values.practitioner),
+		patient: valueOf(patient),
+		date: values.date,
+		slot: values.slot,
+	};
+	const contextParam = extension?.appointment?.contextParam;
+	if (contextParam && patient?.registrationContext !== undefined) {
+		params[contextParam] = patient.registrationContext;
+	}
+	return params;
+}
+
 export function resolveRegisteredPatient(response) {
 	if (response?.patient) {
-		return {
+		const patient = {
 			label: response.patient_name,
 			value: response.patient,
 			image: response.image || "",
 			created: Boolean(response.created),
 		};
+		if (Object.hasOwn(response, "registration_context")) {
+			patient.registrationContext = response.registration_context;
+		}
+		return patient;
 	}
 	if (response?.status === "success" && response.value) {
 		return {

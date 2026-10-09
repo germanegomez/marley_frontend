@@ -3,10 +3,18 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+	appointmentUrl,
+	buildPatientAppointmentParams,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
+	registrationFieldDisabled,
+	registrationFieldOptions,
+	registrationFieldRequired,
 	registrationFieldValue,
+	registrationFieldVisible,
 	registrationFieldsForSection,
+	registrationSectionsForPlacement,
+	registrationResponseError,
 	registrationUrl,
 	resolveRegisteredPatient,
 } from "../src/patientRegistration.js";
@@ -98,8 +106,12 @@ test("derived extension values are evaluated but need not be submitted", () => {
 
 test("declarative fields can target native form sections without domain knowledge", () => {
 	const extension = {
+		sections: [
+			{name: "membership", label: "Membership", placement: "before-address"},
+		],
 		fields: [
 			{name: "account_code"},
+			{name: "membership_kind", section: "membership"},
 			{name: "district", section: "address"},
 			{name: "secondary_phone", section: "contact"},
 		],
@@ -112,7 +124,79 @@ test("declarative fields can target native form sections without domain knowledg
 		registrationFieldsForSection(extension, "address").map(field => field.name),
 		["district"],
 	);
+	assert.deepEqual(
+		registrationSectionsForPlacement(extension).map(section => section.name),
+		["membership"],
+	);
 	assert.deepEqual(registrationFieldsForSection(null, "address"), []);
+});
+
+test("field state and options can depend on other extension values", () => {
+	const values = {kind: "Member"};
+	const context = {options: {plans: [
+		{label: "Plan A", value: "A", kind: "Member"},
+		{label: "Plan B", value: "B", kind: "Private"},
+	]}};
+	const field = {
+		name: "plan",
+		visible: current => current.kind === "Member",
+		required: current => current.kind === "Member",
+		disabled: current => !current.kind,
+		options: (current, currentContext) => currentContext.options.plans.filter(
+			option => option.kind === current.kind,
+		),
+	};
+	assert.equal(registrationFieldVisible(field, values, context), true);
+	assert.equal(registrationFieldRequired(field, values, context), true);
+	assert.equal(registrationFieldDisabled(field, values, context), false);
+	assert.deepEqual(registrationFieldOptions(field, values, context), [
+		{label: "Plan A", value: "A", kind: "Member"},
+	]);
+	assert.equal(registrationFieldVisible({...field, hidden: true}, values, context), false);
+});
+
+test("opaque registration context continues to the configured appointment endpoint", () => {
+	const extension = {
+		appointment: {
+			url: "/api/method/custom.book",
+			contextParam: "registration_context",
+		},
+	};
+	const patient = resolveRegisteredPatient({
+		patient: "PAT-0001",
+		patient_name: "Ana Pérez",
+		created: true,
+		registration_context: "opaque-token",
+	});
+	assert.equal(appointmentUrl(extension), "/api/method/custom.book");
+	assert.deepEqual(buildPatientAppointmentParams({
+		appointmentType: {value: "Consulta"},
+		practitioner: {value: "HLC-PRAC-0001"},
+		date: "2026-10-08",
+		slot: "09:00",
+	}, extension, patient), {
+		from_kiosk: false,
+		appointment_type: "Consulta",
+		practitioner: "HLC-PRAC-0001",
+		patient: "PAT-0001",
+		date: "2026-10-08",
+		slot: "09:00",
+		registration_context: "opaque-token",
+	});
+});
+
+test("an application error is read only through its configured response key", () => {
+	const response = {
+		patient: "PAT-0001",
+		coverage_error: "Coverage data could not be saved",
+	};
+
+	assert.equal(
+		registrationResponseError(response, { responseErrorKey: "coverage_error" }),
+		"Coverage data could not be saved",
+	);
+	assert.equal(registrationResponseError(response, {}), null);
+	assert.equal(registrationResponseError(null, { responseErrorKey: "coverage_error" }), null);
 });
 
 test("the native component does not own product-specific field definitions", () => {
@@ -120,7 +204,14 @@ test("the native component does not own product-specific field definitions", () 
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
 		"utf8",
 	);
-	for (const productTerm of ["Document Type", "Document Number", "DD/MM/YYYY"]) {
+	for (const productTerm of [
+		"Document Type",
+		"Document Number",
+		"DD/MM/YYYY",
+		"Insurance",
+		"Coverage",
+		"Membership Number",
+	]) {
 		assert.equal(component.includes(productTerm), false, productTerm);
 	}
 });
@@ -137,7 +228,9 @@ test("configurable built-in fields expose stable hooks and a visible birth-date 
 	}
 	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
 	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
+	assert.match(component, /registrationSectionsForPlacement\(registrationExtension, 'before-address'\)/);
 	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
+	assert.match(component, /field\.type === 'date'[\s\S]*<DatePicker/);
 });
 
 test("both a newly created and an existing patient continue through the native modal", () => {
