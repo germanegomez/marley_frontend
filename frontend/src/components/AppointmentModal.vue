@@ -489,6 +489,8 @@
 			city: reg_city.value,
 			state: reg_state.value,
 			zip: reg_zip.value,
+			source: reg_source.value,
+			employee: reg_employee.value,
 		};
 	}
 
