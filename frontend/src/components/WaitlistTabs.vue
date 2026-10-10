@@ -336,7 +336,33 @@
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Appointment ID')"
 						:disabled="true" :label="t('Appointment ID')" v-model="status_appointment_id" />
 				</div>
+
+				<template v-if="statusState.active">
+					<div v-for="field in statusFields" :key="field.name" class="py-1 w-full">
+						<FormControl :type="field.type || 'text'" size="sm" variant="subtle"
+							:label="t(field.label)" :disabled="registrationFieldDisabled(field, statusState.values, statusController.context())"
+							:options="registrationFieldOptions(field, statusState.values, statusController.context())"
+							:model-value="registrationFieldValue(field, statusState.values, statusController.context())"
+							@update:model-value="statusState.values[field.name] = $event" />
+					</div>
+				</template>
 			</div>
+			<template v-if="statusState.active">
+				<p v-if="statusState.busy || statusState.response?.loading" role="status" class="py-2 text-sm">{{ t(statusExtension.loadingLabel) }}</p>
+				<p v-if="statusState.error" role="alert" class="py-2 text-sm text-ink-red-4">{{ t(statusState.error) }}</p>
+				<dl class="grid grid-cols-3 gap-2 text-sm py-2">
+					<div v-for="(row, index) in statusResultRows" :key="index"><dt class="text-ink-gray-5">{{ t(row.label) }}</dt><dd class="whitespace-pre-wrap break-words">{{ row.value }}</dd></div>
+				</dl>
+				<div class="py-2 flex flex-wrap gap-2">
+					<Button v-for="action in statusActions" :key="action.name" :disabled="statusState.busy || !registrationActionReady(action, statusState.values, statusController.context())" @click="statusController.act(action)">{{ t(action.label) }}</Button>
+				</div>
+				<div v-if="statusHistoryRows.length" class="overflow-x-auto py-2">
+					<table class="w-full text-sm"><caption class="text-left py-1">{{ t(statusExtension.history.label) }}</caption>
+						<thead><tr><th v-for="column in statusExtension.history.columns" :key="column.name" class="text-left p-1 font-normal text-ink-gray-5">{{ t(column.label) }}</th></tr></thead>
+						<tbody><tr v-for="(row, index) in statusHistoryRows" :key="index"><td v-for="column in statusExtension.history.columns" :key="column.name" class="p-1 align-top break-words">{{ row[column.name] }}</td></tr></tbody>
+					</table>
+				</div>
+			</template>
 		</template>
 		<template #actions>
 			<Button variant="solid" v-if="showcheckinButton" @click="updateAppointmentStatus('Checked In')">
@@ -863,7 +889,9 @@
 
 <script setup>
 	import { appointmentDeskTranslation as t } from '@/translation'
-	import { ref, watch } from "vue";
+	import { ref, watch, reactive, computed, onUnmounted } from "vue";
+	import { getAppointmentStatusExtension, createStatusExtensionController } from '@/statusExtension';
+	import { registrationFieldVisible, registrationFieldDisabled, registrationFieldOptions, registrationFieldValue, registrationActionReady, registrationActionResultRows } from '@/patientRegistration';
 	import {
 		createResource,
 		Tooltip,
@@ -909,6 +937,17 @@
 	const showConfirmButton = ref(true);
 	const showcheckinButton = ref(true);
 	const openStatusDialog = ref(false);
+	const statusExtension = getAppointmentStatusExtension();
+	const statusState = reactive({active: false, busy: false, values: {}, response: null, row: null, error: ''});
+	const statusController = createStatusExtensionController(statusState, {
+		request: (url, options) => createResource({url, ...options}).submit(options.params),
+	});
+	const statusFields = computed(() => (statusExtension?.fields || []).filter(field => registrationFieldVisible(field, statusState.values, statusController.context())));
+	const statusActions = computed(() => statusExtension?.actions || []);
+	const statusResultRows = computed(() => registrationActionResultRows(statusExtension, statusState.response, statusState.values, statusController.context()));
+	const statusHistoryRows = computed(() => statusExtension?.history?.rows?.(statusState.response) || []);
+	watch(openStatusDialog, open => { if (!open) statusController.close(); });
+	onUnmounted(() => statusController.close());
 	const createVitalsDialog = ref(false);
 	const scheduleDialog = ref(false);
 	const open_services_sales_invoice = ref(false);
@@ -1143,6 +1182,7 @@
 		status_patient.value = row.patient_name;
 		status_patient_id.value = row.patient;
 		status_appointment_id.value = row.name;
+		if (openStatusDialog.value) statusController.open(statusExtension, row);
 	};
 
 	function updateAppointmentStatus(status) {
