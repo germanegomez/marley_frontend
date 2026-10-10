@@ -327,7 +327,7 @@
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle" :placeholder="t('Patient ID')"
 						:disabled="true" :label="t('Patient ID')" v-model="status_patient_id" />
 				</div>
-				<div class="py-1 w-full">
+				<div class="py-1 w-full" :style="{order: statusExtension?.nativeFieldOrder?.patientName || 0}">
 					<FormControl :type="'text'" :ref_for="true" size="sm" variant="subtle"
 						:placeholder="t('Patient Name')" :disabled="true" :label="t('Patient Name')"
 						v-model="status_patient" />
