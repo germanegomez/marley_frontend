@@ -81,101 +81,90 @@
 			<!-- Registration fields -->
 			<div v-if="is_new_patient" data-patient-registration-form>
 				<div class="grid grid-cols-3 gap-2 pb-2" data-patient-registration-grid>
-					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" :label="t('First Name')" v-model="reg_firstName" :required="true" />
-						<ErrorMessage v-if="errors.firstName" :message="errors.firstName"/>
-					</div>
-					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" :label="t('Last Name')" v-model="reg_lastName" :required="registrationBuiltInRequired('lastName')" />
-						<ErrorMessage v-if="errors.lastName" :message="errors.lastName"/>
-					</div>
-					<div class="py-1 w-full">
-						<FormControl type="text" variant="subtle" :label="t('Contact Number')" v-model="reg_contactNumber" :required="true" />
-						<ErrorMessage v-if="errors.contactNumber" :message="errors.contactNumber"/>
-					</div>
-					<div class="py-1 w-full">
-						<FormControl type="text" v-model="reg_email" :label="t('Email ID')"/>
-					</div>
-					<div class="py-1 w-full">
-						<FormControl type="select" :options="genderOptions" variant="subtle" :label="t('Select Gender')" :placeholder="t('Select Gender')" v-model="reg_gender" :required="true" />
-						<ErrorMessage v-if="errors.gender" :message="errors.gender"/>
-					</div>
-					<div class="py-1 w-full">
-						<FormControl type="select" :options="maritalStatusOptions" v-model="reg_marital_status" :label="t('Marital Status')" :placeholder="t('Marital Status')" :required="registrationBuiltInRequired('maritalStatus')"/>
-						<ErrorMessage v-if="errors.maritalStatus" :message="errors.maritalStatus"/>
-					</div>
-					<div
-						v-if="registrationBuiltInVisible('age')"
-						class="py-1 w-full"
-						data-registration-built-in-field="age"
-					>
-						<FormControl
-							type="number"
-							:modelValue="registrationBuiltInValue('age', reg_age)"
-							@update:modelValue="value => setRegistrationBuiltInValue('age', reg_age, value)"
-							:label="t('Age')"
-							:disabled="registrationBuiltInDisabled('age')"
-						/>
-					</div>
-					<div
-						v-if="registrationBuiltInVisible('dob')"
-						class="py-1 w-full"
-						data-registration-built-in-field="dob"
-					>
-						<label class="mb-1.5 block text-xs text-ink-gray-5">
-							<span>
-								{{ t('Date of Birth') }}
-								<span v-if="registrationBuiltInRequired('dob')" class="text-ink-red-3"> *</span>
-							</span>
-							<DatePicker
-								v-model="reg_dob"
+					<template v-for="item in registrationLayout" :key="item.key">
+						<div
+							v-if="item.kind === 'empty'"
+							aria-hidden="true"
+							data-registration-empty-cell
+						></div>
+						<div
+							v-else-if="item.kind === 'extension'"
+							v-show="registrationExtensionFieldVisible(item.field)"
+							class="py-1 w-full"
+							:data-registration-extension-field="item.name"
+						>
+							<label v-if="item.field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
+								<span>
+									{{ t(item.field.label || item.name) }}
+									<span v-if="registrationExtensionFieldRequired(item.field)" class="text-ink-red-3"> *</span>
+								</span>
+								<DatePicker
+									:modelValue="registrationExtensionFieldValue(item.field)"
+									@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+									@blur="runRegistrationFieldActions(item.field, 'blur')"
+									variant="subtle"
+									:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+									:required="registrationExtensionFieldRequired(item.field)"
+									:disabled="registrationExtensionFieldDisabled(item.field)"
+									:formatter="(date) => getFormat(date, '', true)"
+								/>
+							</label>
+							<FormControl
+								v-else
+								:type="item.field.type || 'text'"
+								:modelValue="registrationExtensionFieldValue(item.field)"
+								@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+								@blur="runRegistrationFieldActions(item.field, 'blur')"
+								:options="registrationExtensionFieldOptions(item.field)"
 								variant="subtle"
-								:placeholder="t('Date of Birth')"
-								:disabled="false"
-								:required="registrationBuiltInRequired('dob')"
-								:formatter="(date) => getFormat(date, '', true)"
+								:label="t(item.field.label || item.name)"
+								:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+								:required="registrationExtensionFieldRequired(item.field)"
+								:disabled="registrationExtensionFieldDisabled(item.field)"
 							/>
-						</label>
-						<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
-					</div>
-					<div
-						v-for="field in registrationFieldsForSection(registrationExtension)"
-						v-show="registrationExtensionFieldVisible(field)"
-						:key="field.name"
-						class="py-1 w-full"
-						:data-registration-extension-field="field.name"
-					>
-						<label v-if="field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
-							<span>
-								{{ t(field.label || field.name) }}
-								<span v-if="registrationExtensionFieldRequired(field)" class="text-ink-red-3"> *</span>
-							</span>
-							<DatePicker
-								:modelValue="registrationExtensionFieldValue(field)"
-								@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
-								@blur="runRegistrationFieldActions(field, 'blur')"
-								variant="subtle"
-								:placeholder="registrationExtensionFieldPlaceholder(field)"
-								:required="registrationExtensionFieldRequired(field)"
-								:disabled="registrationExtensionFieldDisabled(field)"
-								:formatter="(date) => getFormat(date, '', true)"
-							/>
-						</label>
-						<FormControl
+							<ErrorMessage v-if="errors[`extension_${item.name}`]" :message="errors[`extension_${item.name}`]"/>
+						</div>
+						<div
+							v-else-if="item.name === 'dob'"
+							class="py-1 w-full"
+							:data-registration-built-in-field="item.name"
+						>
+							<label class="mb-1.5 block text-xs text-ink-gray-5">
+								<span>
+									{{ t('Date of Birth') }}
+									<span v-if="registrationBuiltInRequired('dob')" class="text-ink-red-3"> *</span>
+								</span>
+								<DatePicker
+									:modelValue="registrationBuiltInValue('dob')"
+									@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
+									variant="subtle"
+									:placeholder="t('Date of Birth')"
+									:disabled="registrationBuiltInDisabled('dob')"
+									:required="registrationBuiltInRequired('dob')"
+									:formatter="(date) => getFormat(date, '', true)"
+								/>
+							</label>
+							<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
+						</div>
+						<div
 							v-else
-							:type="field.type || 'text'"
-							:modelValue="registrationExtensionFieldValue(field)"
-							@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
-							@blur="runRegistrationFieldActions(field, 'blur')"
-							:options="registrationExtensionFieldOptions(field)"
-							variant="subtle"
-							:label="t(field.label || field.name)"
-							:placeholder="registrationExtensionFieldPlaceholder(field)"
-							:required="registrationExtensionFieldRequired(field)"
-							:disabled="registrationExtensionFieldDisabled(field)"
-						/>
-						<ErrorMessage v-if="errors[`extension_${field.name}`]" :message="errors[`extension_${field.name}`]"/>
-					</div>
+							class="py-1 w-full"
+							:data-registration-built-in-field="item.name"
+						>
+							<FormControl
+								:type="registrationBuiltInType(item.name)"
+								:modelValue="registrationBuiltInValue(item.name)"
+								@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
+								:options="registrationBuiltInOptions(item.name)"
+								:variant="registrationBuiltInVariant(item.name)"
+								:label="registrationBuiltInLabel(item.name)"
+								:placeholder="registrationBuiltInPlaceholder(item.name)"
+								:required="registrationBuiltInRequired(item.name)"
+								:disabled="registrationBuiltInDisabled(item.name)"
+							/>
+							<ErrorMessage v-if="errors[item.name]" :message="errors[item.name]"/>
+						</div>
+					</template>
 				</div>
 				<template
 					v-for="section in registrationSectionsForPlacement(registrationExtension, 'before-address')"
@@ -364,6 +353,7 @@
 	import {
 		appointmentUrl,
 		buildPatientAppointmentParams,
+		buildPatientRegistrationLayout,
 		buildPatientRegistrationParams,
 		getPatientRegistrationExtension,
 		registrationActionDependsOn,
@@ -405,6 +395,7 @@
 
 	const selectedSlot = ref(null);
 	const registrationExtension = getPatientRegistrationExtension(window);
+	const registrationLayout = buildPatientRegistrationLayout(registrationExtension);
 
 	let dialog_message = ref("");
 	let dialog_title = ref("");
@@ -417,6 +408,26 @@
 	const reg_dob = ref("");
 	const reg_marital_status = ref("");
 	const reg_age = ref(null);
+	const registrationBuiltInRefs = {
+		firstName: reg_firstName,
+		lastName: reg_lastName,
+		contactNumber: reg_contactNumber,
+		email: reg_email,
+		gender: reg_gender,
+		dob: reg_dob,
+		age: reg_age,
+		maritalStatus: reg_marital_status,
+	};
+	const registrationBuiltInPresentation = {
+		firstName: { type: 'text', label: 'First Name', required: true, variant: 'subtle' },
+		lastName: { type: 'text', label: 'Last Name', variant: 'subtle' },
+		contactNumber: { type: 'text', label: 'Contact Number', required: true, variant: 'subtle' },
+		email: { type: 'text', label: 'Email ID' },
+		gender: { type: 'select', label: 'Select Gender', placeholder: 'Select Gender', required: true, variant: 'subtle' },
+		maritalStatus: { type: 'select', label: 'Marital Status', placeholder: 'Marital Status' },
+		age: { type: 'number', label: 'Age' },
+		dob: { type: 'date', label: 'Date of Birth', variant: 'subtle' },
+	};
 	const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widow'].map(value => ({
 		label: t(value),
 		value,
@@ -462,7 +473,10 @@
 	}
 
 	function registrationBuiltInRequired(name) {
-		return Boolean(registrationBuiltInConfig(name).required);
+		return Boolean(
+			registrationBuiltInPresentation[name]?.required
+			|| registrationBuiltInConfig(name).required
+		);
 	}
 
 	function registrationBuiltInDisabled(name) {
@@ -470,8 +484,32 @@
 		return Boolean(config.disabled || config.derive);
 	}
 
-	function registrationBuiltInLabel(name, fallback) {
-		return t(registrationBuiltInConfig(name).label || fallback);
+	function registrationBuiltInType(name) {
+		return registrationBuiltInPresentation[name]?.type || 'text';
+	}
+
+	function registrationBuiltInLabel(name, fallback = name) {
+		return t(
+			registrationBuiltInConfig(name).label
+			|| registrationBuiltInPresentation[name]?.label
+			|| fallback
+		);
+	}
+
+	function registrationBuiltInPlaceholder(name) {
+		const placeholder = registrationBuiltInConfig(name).placeholder
+			|| registrationBuiltInPresentation[name]?.placeholder;
+		return placeholder ? t(placeholder) : undefined;
+	}
+
+	function registrationBuiltInVariant(name) {
+		return registrationBuiltInPresentation[name]?.variant;
+	}
+
+	function registrationBuiltInOptions(name) {
+		if (name === 'gender') return genderOptions.value;
+		if (name === 'maritalStatus') return maritalStatusOptions;
+		return undefined;
 	}
 
 	function registrationBuiltInValues() {
@@ -501,16 +539,18 @@
 		};
 	}
 
-	function registrationBuiltInValue(name, valueRef) {
+	function registrationBuiltInValue(name) {
 		const config = registrationBuiltInConfig(name);
 		if (typeof config.derive === 'function') {
 			return config.derive(registrationBuiltInValues(), registrationDeriveContext());
 		}
-		return valueRef.value;
+		return registrationBuiltInRefs[name]?.value;
 	}
 
-	function setRegistrationBuiltInValue(name, valueRef, value) {
-		if (!registrationBuiltInConfig(name).derive) valueRef.value = value;
+	function setRegistrationBuiltInValue(name, value) {
+		if (!registrationBuiltInConfig(name).derive && registrationBuiltInRefs[name]) {
+			registrationBuiltInRefs[name].value = value;
+		}
 	}
 
 	function registrationExtensionFieldOptions(field) {
