@@ -5,6 +5,7 @@ import test from "node:test";
 import {
 	appointmentUrl,
 	buildPatientAppointmentParams,
+	buildPatientRegistrationLayout,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationActionDependsOn,
@@ -100,6 +101,55 @@ test("declarative actions build stable requests and apply configured responses",
 	);
 });
 
+test("a generic layout interleaves built-in and extension fields in DOM order", () => {
+	const layout = buildPatientRegistrationLayout({
+		fields: [
+			{name: "membership_kind"},
+			{name: "membership_code"},
+		],
+		fieldLayout: [
+			[
+				{source: "extension", name: "membership_kind"},
+				{source: "extension", name: "membership_code"},
+				null,
+			],
+			[
+				{source: "builtIn", name: "firstName"},
+				{source: "builtIn", name: "lastName"},
+				null,
+			],
+			[
+				{source: "builtIn", name: "dob"},
+				{source: "builtIn", name: "age"},
+				{source: "builtIn", name: "gender"},
+			],
+			[
+				{source: "builtIn", name: "contactNumber"},
+				{source: "builtIn", name: "email"},
+				{source: "builtIn", name: "maritalStatus"},
+			],
+		],
+	});
+
+	assert.deepEqual(
+		layout.map(item => item.kind === "empty" ? null : item.key),
+		[
+			"extension:membership_kind",
+			"extension:membership_code",
+			null,
+			"builtIn:firstName",
+			"builtIn:lastName",
+			null,
+			"builtIn:dob",
+			"builtIn:age",
+			"builtIn:gender",
+			"builtIn:contactNumber",
+			"builtIn:email",
+			"builtIn:maritalStatus",
+		],
+	);
+});
+
 test("declarative action defaults are deterministic and errors are safe text", () => {
 	const action = { name: "lookup", url: "/lookup", dependsOn: ["kind", "code"] };
 	const values = { kind: { value: "member" }, code: "A-1" };
@@ -120,6 +170,26 @@ test("declarative actions deduplicate requests and reject stale responses", () =
 	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-1"), true);
 	assert.equal(registrationActionResultIsCurrent(5, 4, "member:A-1", "member:A-1"), false);
 	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-2"), false);
+});
+
+test("the native layout stays unchanged when no field layout is configured", () => {
+	const layout = buildPatientRegistrationLayout({
+		fields: [
+			{name: "membership_kind"},
+			{name: "district", section: "address"},
+		],
+	});
+	assert.deepEqual(layout.map(item => item.key), [
+		"builtIn:firstName",
+		"builtIn:lastName",
+		"builtIn:contactNumber",
+		"builtIn:email",
+		"builtIn:gender",
+		"builtIn:maritalStatus",
+		"builtIn:age",
+		"builtIn:dob",
+		"extension:membership_kind",
+	]);
 });
 
 test("the optional registration extension is explicit and complete", () => {
@@ -324,14 +394,17 @@ test("configurable built-in fields expose stable hooks and a visible birth-date 
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
 		"utf8",
 	);
-	assert.match(component, /data-registration-built-in-field="age"/);
-	assert.match(component, /data-registration-built-in-field="dob"/);
+	assert.match(component, /:data-registration-built-in-field="item\.name"/);
+	assert.match(component, /data-registration-empty-cell/);
 	for (const field of ["addressLine1", "addressLine2", "city", "state", "zip"]) {
 		assert.match(component, new RegExp(`data-registration-built-in-field="${field}"`));
 	}
 	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
 	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
 	assert.match(component, /registrationSectionsForPlacement\(registrationExtension, 'before-address'\)/);
+	assert.match(component, /v-show="registrationExtensionFieldVisible\(item\.field\)"/);
+	assert.match(component, /item\.field\.type === 'date'[\s\S]*<DatePicker/);
+	assert.match(component, /:required="registrationExtensionFieldRequired\(item\.field\)"/);
 	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
 	assert.match(component, /field\.type === 'date'[\s\S]*<DatePicker/);
 });
