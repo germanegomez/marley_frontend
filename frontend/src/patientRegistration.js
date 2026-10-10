@@ -1,5 +1,15 @@
 const DEFAULT_REGISTRATION_URL = "/api/method/marley_frontend.waitlist.patient_registration";
 const DEFAULT_APPOINTMENT_URL = "/api/method/marley_frontend.waitlist.patient_appointment";
+const BUILT_IN_REGISTRATION_FIELDS = [
+	"firstName",
+	"lastName",
+	"contactNumber",
+	"email",
+	"gender",
+	"maritalStatus",
+	"age",
+	"dob",
+];
 
 export function getPatientRegistrationExtension(scope = globalThis) {
 	const extension = scope?.marleyFrontend?.patientRegistration;
@@ -56,6 +66,55 @@ export function registrationFieldOptions(field, values, context = {}) {
 	const configured = evaluateSetting(field?.options, values, context, undefined);
 	if (configured !== undefined) return configured || [];
 	return context.options?.[field?.optionsKey] || [];
+}
+
+export function buildPatientRegistrationLayout(extension = null) {
+	const fields = [
+		...BUILT_IN_REGISTRATION_FIELDS
+			.filter(name => !extension?.builtInFields?.[name]?.hidden)
+			.map(name => ({
+				kind: "builtIn",
+				name,
+				key: `builtIn:${name}`,
+			})),
+		...registrationFieldsForSection(extension)
+			.filter(field => field?.name && !field.hidden)
+			.map(field => ({
+				kind: "extension",
+				name: field.name,
+				key: `extension:${field.name}`,
+				field,
+			})),
+	];
+	const fieldByKey = new Map(fields.map(field => [field.key, field]));
+	if (!Array.isArray(extension?.fieldLayout)) return fields;
+
+	const seen = new Set();
+	const layout = [];
+	for (const [rowIndex, row] of extension.fieldLayout.entries()) {
+		const cells = Array.isArray(row) ? row : [];
+		for (let columnIndex = 0; columnIndex < 3; columnIndex += 1) {
+			const reference = cells[columnIndex];
+			const key = reference?.source && reference?.name
+				? `${reference.source}:${reference.name}`
+				: null;
+			const field = key && !seen.has(key) ? fieldByKey.get(key) : null;
+			if (field) {
+				layout.push(field);
+				seen.add(key);
+			} else {
+				layout.push({
+					kind: "empty",
+					key: `empty:${rowIndex}:${columnIndex}`,
+				});
+			}
+		}
+	}
+
+	return [
+		...layout,
+		...fields.filter(field => !seen.has(field.key)),
+	];
 }
 
 export function buildPatientRegistrationParams(
