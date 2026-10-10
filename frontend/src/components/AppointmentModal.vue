@@ -94,6 +94,7 @@
 						>
 							<FormControl
 								:type="item.field.type || 'text'"
+								class="w-full"
 								:modelValue="registrationExtensionFieldValue(item.field)"
 								@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
 								:options="registrationExtensionFieldOptions(item.field)"
@@ -110,21 +111,17 @@
 							class="py-1 w-full"
 							:data-registration-built-in-field="item.name"
 						>
-							<label class="mb-1.5 block text-xs text-ink-gray-5">
-								<span>
-									{{ t('Date of Birth') }}
-									<span v-if="registrationBuiltInRequired('dob')" class="text-ink-red-3"> *</span>
-								</span>
-								<DatePicker
-									:modelValue="registrationBuiltInValue('dob')"
-									@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
-									variant="subtle"
-									:placeholder="t('Date of Birth')"
-									:disabled="registrationBuiltInDisabled('dob')"
-									:required="registrationBuiltInRequired('dob')"
-									:formatter="(date) => getFormat(date, '', true)"
-								/>
-							</label>
+							<DatePicker
+								:modelValue="registrationBuiltInValue('dob')"
+								@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
+								:label="t(registrationBuiltInLabel('dob'))"
+								class="w-full"
+								variant="subtle"
+								:placeholder="t('Date of Birth')"
+								:disabled="registrationBuiltInDisabled('dob')"
+								:required="registrationBuiltInRequired('dob')"
+								:formatter="(date) => getFormat(date, '', true)"
+							/>
 							<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
 						</div>
 						<div
@@ -134,6 +131,7 @@
 						>
 							<FormControl
 								:type="registrationBuiltInType(item.name)"
+								class="w-full"
 								:modelValue="registrationBuiltInValue(item.name)"
 								@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
 								:options="registrationBuiltInOptions(item.name)"
@@ -270,7 +268,7 @@
 		lastName: { type: 'text', label: 'Last Name', variant: 'subtle' },
 		contactNumber: { type: 'text', label: 'Contact Number', required: true, variant: 'subtle' },
 		email: { type: 'text', label: 'Email ID' },
-		gender: { type: 'select', label: 'Select Gender', placeholder: 'Select Gender', required: true, variant: 'subtle' },
+		gender: { type: 'select', label: 'Gender', placeholder: 'Select Gender', required: true, variant: 'subtle' },
 		maritalStatus: { type: 'select', label: 'Marital Status', placeholder: 'Marital Status' },
 		age: { type: 'number', label: 'Age' },
 		dob: { type: 'date', label: 'Date of Birth', variant: 'subtle' },

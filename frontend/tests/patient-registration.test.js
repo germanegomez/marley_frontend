@@ -172,14 +172,47 @@ test("the native component does not own product-specific field definitions", () 
 	}
 });
 
-test("configurable built-in fields expose stable hooks and a visible birth-date label", () => {
+test("registration controls fill their grid cells without changing layout order", () => {
 	const component = readFileSync(
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
 		"utf8",
 	);
 	assert.match(component, /:data-registration-built-in-field="item\.name"/);
 	assert.match(component, /data-registration-empty-cell/);
-	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
+	assert.match(
+		component,
+		/v-else-if="item\.kind === 'extension'"[\s\S]*?<FormControl[\s\S]*?class="w-full"/,
+	);
+	assert.match(
+		component,
+		/v-else[\s\S]*?:data-registration-built-in-field="item\.name"[\s\S]*?<FormControl[\s\S]*?class="w-full"/,
+	);
+});
+
+test("birth date uses the shared date-control label and spacing contract", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(
+		component,
+		/v-else-if="item\.name === 'dob'"[\s\S]*?<DatePicker[\s\S]*?:label="t\(registrationBuiltInLabel\('dob'\)\)"[\s\S]*?class="w-full"/,
+	);
+	assert.doesNotMatch(
+		component,
+		/<label[^>]*>[\s\S]*?t\('Date of Birth'\)[\s\S]*?<DatePicker/,
+	);
+});
+
+test("gender keeps a distinct visible label and selection placeholder", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(
+		component,
+		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select Gender'/,
+	);
 });
 
 test("both a newly created and an existing patient continue through the native modal", () => {
