@@ -6,6 +6,7 @@ import {
 	appointmentUrl,
 	buildPatientAppointmentParams,
 	buildPatientRegistrationLayout,
+	buildPatientRegistrationSectionLayout,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationFieldDisabled,
@@ -67,6 +68,38 @@ test("a generic layout interleaves built-in and extension fields in DOM order", 
 			"builtIn:maritalStatus",
 		],
 	);
+});
+
+test("a section layout preserves row-major order for built-in and extension fields", () => {
+	const layout = buildPatientRegistrationSectionLayout({
+		fields: [
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+		sectionLayouts: {
+			address: [
+				[
+					{source: "builtIn", name: "state"},
+					{source: "extension", name: "district"},
+					{source: "builtIn", name: "city"},
+				],
+				[
+					{source: "builtIn", name: "addressLine1"},
+					{source: "builtIn", name: "addressLine2"},
+					{source: "builtIn", name: "zip"},
+				],
+			],
+		},
+	}, "address", ["addressLine1", "addressLine2", "city", "state", "zip"]);
+
+	assert.deepEqual(layout.map(item => item.key), [
+		"builtIn:state",
+		"extension:district",
+		"builtIn:city",
+		"builtIn:addressLine1",
+		"builtIn:addressLine2",
+		"builtIn:zip",
+	]);
 });
 
 test("the native layout stays unchanged when no field layout is configured", () => {
@@ -286,24 +319,94 @@ test("the native component does not own product-specific field definitions", () 
 	}
 });
 
-test("configurable built-in fields expose stable hooks and a visible birth-date label", () => {
+test("registration controls fill their grid cells without changing layout order", () => {
 	const component = readFileSync(
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
 		"utf8",
 	);
 	assert.match(component, /:data-registration-built-in-field="item\.name"/);
 	assert.match(component, /data-registration-empty-cell/);
-	for (const field of ["addressLine1", "addressLine2", "city", "state", "zip"]) {
-		assert.match(component, new RegExp(`data-registration-built-in-field="${field}"`));
-	}
-	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
-	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
 	assert.match(component, /registrationSectionsForPlacement\(registrationExtension, 'before-address'\)/);
-	assert.match(component, /v-show="registrationExtensionFieldVisible\(item\.field\)"/);
+	assert.match(component, /registrationSectionLayout\(section\)/);
+	assert.match(component, /v-show="item\.kind === 'empty' \|\| registrationExtensionFieldVisible\(item\.field\)"/);
 	assert.match(component, /item\.field\.type === 'date'[\s\S]*<DatePicker/);
 	assert.match(component, /:required="registrationExtensionFieldRequired\(item\.field\)"/);
-	assert.match(component, /<label[^>]*>[\s\S]*t\('Date of Birth'\)[\s\S]*<DatePicker/);
-	assert.match(component, /field\.type === 'date'[\s\S]*<DatePicker/);
+	assert.match(
+		component,
+		/v-else-if="item\.kind === 'extension'"[\s\S]*?<FormControl[\s\S]*?class="w-full"/,
+	);
+	assert.match(
+		component,
+		/v-else[\s\S]*?:data-registration-built-in-field="item\.name"[\s\S]*?<FormControl[\s\S]*?class="w-full"/,
+	);
+});
+
+test("birth date uses the shared date-control label and spacing contract", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(
+		component,
+		/v-else-if="item\.name === 'dob'"[\s\S]*?<DatePicker[\s\S]*?:label="t\(registrationBuiltInLabel\('dob'\)\)"[\s\S]*?class="w-full"/,
+	);
+	const dateOfBirthControl = component.slice(
+		component.indexOf(`v-else-if="item.name === 'dob'"`),
+		component.indexOf("<div\n\t\t\t\t\t\t\tv-else", component.indexOf(`v-else-if="item.name === 'dob'"`)),
+	);
+	assert.doesNotMatch(
+		dateOfBirthControl,
+		/<label[^>]*>[\s\S]*?t\('Date of Birth'\)[\s\S]*?<DatePicker/,
+	);
+});
+
+test("declarative sections keep responsive three-column order and full-width controls", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	const sectionStart = component.indexOf('v-for="section in registrationSectionsForPlacement');
+	const sectionEnd = component.indexOf("{{ t('Address & Contact') }}", sectionStart);
+	const sectionTemplate = component.slice(sectionStart, sectionEnd);
+	assert.match(sectionTemplate, /grid-cols-1 md:grid-cols-3/);
+	assert.match(sectionTemplate, /v-for="item in registrationSectionLayout\(section\)"/);
+	assert.match(sectionTemplate, /item\.kind === 'empty' \? 'hidden md:block' : 'py-1 w-full'/);
+	assert.equal((sectionTemplate.match(/class="w-full"/g) || []).length, 2);
+	assert.match(sectionTemplate, /:class="\{ 'mb-2': !section\.description \}"/);
+	assert.doesNotMatch(sectionTemplate, /(?:^|\s)(?:order-|col-span-)/);
+});
+
+test("gender keeps a distinct visible label and selection placeholder", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(
+		component,
+		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select Gender'/,
+	);
+});
+
+test("address fields keep their generic built-in and extension contracts", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	const addressSectionMarker = component.indexOf('data-registration-section="address"');
+	const addressTemplate = component.slice(
+		component.lastIndexOf("<div", addressSectionMarker),
+		component.indexOf("{{ t('Source Details') }}"),
+	);
+	assert.match(addressTemplate, /grid-cols-1 md:grid-cols-3/);
+	assert.match(addressTemplate, /v-for="item in addressLayout"/);
+	assert.match(addressTemplate, /:data-registration-built-in-field="item\.kind === 'builtIn' \? item\.name : undefined"/);
+	assert.match(addressTemplate, /:data-registration-extension-field="item\.kind === 'extension' \? item\.name : undefined"/);
+	assert.equal((addressTemplate.match(/class="w-full"/g) || []).length, 2);
+	assert.doesNotMatch(addressTemplate, /(?:^|\s)(?:order-|col-span-)/);
+	assert.match(
+		component,
+		/const addressLayout = buildPatientRegistrationSectionLayout\([\s\S]*?'address'/,
+	);
 });
 
 test("both a newly created and an existing patient continue through the native modal", () => {
