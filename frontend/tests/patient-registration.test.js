@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
 	buildPatientRegistrationLayout,
+	buildPatientRegistrationSectionLayout,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationFieldValue,
@@ -59,6 +60,38 @@ test("a generic layout interleaves built-in and extension fields in DOM order", 
 			"builtIn:maritalStatus",
 		],
 	);
+});
+
+test("a section layout preserves row-major order for built-in and extension fields", () => {
+	const layout = buildPatientRegistrationSectionLayout({
+		fields: [
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+		sectionLayouts: {
+			address: [
+				[
+					{source: "builtIn", name: "state"},
+					{source: "extension", name: "district"},
+					{source: "builtIn", name: "city"},
+				],
+				[
+					{source: "builtIn", name: "addressLine1"},
+					{source: "builtIn", name: "addressLine2"},
+					{source: "builtIn", name: "zip"},
+				],
+			],
+		},
+	}, "address", ["addressLine1", "addressLine2", "city", "state", "zip"]);
+
+	assert.deepEqual(layout.map(item => item.key), [
+		"builtIn:state",
+		"extension:district",
+		"builtIn:city",
+		"builtIn:addressLine1",
+		"builtIn:addressLine2",
+		"builtIn:zip",
+	]);
 });
 
 test("the native layout stays unchanged when no field layout is configured", () => {
@@ -243,11 +276,21 @@ test("address fields keep their generic built-in and extension contracts", () =>
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
 		"utf8",
 	);
-	for (const field of ["addressLine1", "addressLine2", "city", "state", "zip"]) {
-		assert.match(component, new RegExp(`data-registration-built-in-field="${field}"`));
-	}
-	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
-	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
+	const addressSectionMarker = component.indexOf('data-registration-section="address"');
+	const addressTemplate = component.slice(
+		component.lastIndexOf("<div", addressSectionMarker),
+		component.indexOf("{{ t('Source Details') }}"),
+	);
+	assert.match(addressTemplate, /grid-cols-1 md:grid-cols-3/);
+	assert.match(addressTemplate, /v-for="item in addressLayout"/);
+	assert.match(addressTemplate, /:data-registration-built-in-field="item\.kind === 'builtIn' \? item\.name : undefined"/);
+	assert.match(addressTemplate, /:data-registration-extension-field="item\.kind === 'extension' \? item\.name : undefined"/);
+	assert.equal((addressTemplate.match(/class="w-full"/g) || []).length, 2);
+	assert.doesNotMatch(addressTemplate, /(?:^|\s)(?:order-|col-span-)/);
+	assert.match(
+		component,
+		/const addressLayout = buildPatientRegistrationSectionLayout\([\s\S]*?'address'/,
+	);
 });
 
 test("both a newly created and an existing patient continue through the native modal", () => {
