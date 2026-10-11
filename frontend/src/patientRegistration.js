@@ -27,6 +27,12 @@ export function registrationFieldValue(field, values, context = {}) {
 	return values[field?.name];
 }
 
+export function registrationFieldsForSection(extension, section = "registration") {
+	return (extension?.fields || []).filter(
+		(field) => (field.section || "registration") === section,
+	);
+}
+
 export function buildPatientRegistrationLayout(extension = null) {
 	const fields = [
 		...BUILT_IN_REGISTRATION_FIELDS
@@ -36,7 +42,7 @@ export function buildPatientRegistrationLayout(extension = null) {
 				name,
 				key: `builtIn:${name}`,
 			})),
-		...(extension?.fields || [])
+		...registrationFieldsForSection(extension)
 			.filter(field => field?.name && !field.hidden)
 			.map(field => ({
 				kind: "extension",

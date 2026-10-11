@@ -136,7 +136,7 @@
 								@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
 								:options="registrationBuiltInOptions(item.name)"
 								:variant="registrationBuiltInVariant(item.name)"
-								:label="t(registrationBuiltInLabel(item.name))"
+								:label="registrationBuiltInLabel(item.name)"
 								:placeholder="registrationBuiltInPlaceholder(item.name)"
 								:required="registrationBuiltInRequired(item.name)"
 								:disabled="registrationBuiltInDisabled(item.name)"
@@ -150,20 +150,44 @@
 				</div>
 
 				<div class="grid grid-cols-3 gap-2">
-					<div class="py-1 w-full">
-						<FormControl :label="t('Address Line 1')" v-model="reg_addressLine1" type="text" variant="subtle" :disabled="false" />
+					<div v-if="registrationBuiltInVisible('addressLine1')" class="py-1 w-full" data-registration-built-in-field="addressLine1">
+						<FormControl :label="registrationBuiltInLabel('addressLine1', 'Address Line 1')" v-model="reg_addressLine1" type="text" variant="subtle" :required="registrationBuiltInRequired('addressLine1')" :disabled="registrationBuiltInDisabled('addressLine1')" />
+						<ErrorMessage v-if="errors.addressLine1" :message="errors.addressLine1"/>
 					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('City/District')" v-model="reg_city" type="text" variant="subtle" :disabled="false" />
+					<div v-if="registrationBuiltInVisible('city')" class="py-1 w-full" data-registration-built-in-field="city">
+						<FormControl :label="registrationBuiltInLabel('city', 'City/District')" v-model="reg_city" type="text" variant="subtle" :required="registrationBuiltInRequired('city')" :disabled="registrationBuiltInDisabled('city')" />
+						<ErrorMessage v-if="errors.city" :message="errors.city"/>
 					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('State/Province')" v-model="reg_state" type="text" variant="subtle" :disabled="false" />
+					<div v-if="registrationBuiltInVisible('state')" class="py-1 w-full" data-registration-built-in-field="state">
+						<FormControl :label="registrationBuiltInLabel('state', 'State/Province')" v-model="reg_state" type="text" variant="subtle" :required="registrationBuiltInRequired('state')" :disabled="registrationBuiltInDisabled('state')" />
+						<ErrorMessage v-if="errors.state" :message="errors.state"/>
 					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('Address Line 2')" v-model="reg_addressLine2" type="text" variant="subtle" :disabled="false" />
+					<div v-if="registrationBuiltInVisible('addressLine2')" class="py-1 w-full" data-registration-built-in-field="addressLine2">
+						<FormControl :label="registrationBuiltInLabel('addressLine2', 'Address Line 2')" v-model="reg_addressLine2" type="text" variant="subtle" :required="registrationBuiltInRequired('addressLine2')" :disabled="registrationBuiltInDisabled('addressLine2')" />
+						<ErrorMessage v-if="errors.addressLine2" :message="errors.addressLine2"/>
 					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('ZIP Code')" v-model="reg_zip" type="text" variant="subtle" :disabled="false" />
+					<div v-if="registrationBuiltInVisible('zip')" class="py-1 w-full" data-registration-built-in-field="zip">
+						<FormControl :label="registrationBuiltInLabel('zip', 'ZIP Code')" v-model="reg_zip" type="text" variant="subtle" :required="registrationBuiltInRequired('zip')" :disabled="registrationBuiltInDisabled('zip')" />
+						<ErrorMessage v-if="errors.zip" :message="errors.zip"/>
+					</div>
+					<div
+						v-for="field in registrationFieldsForSection(registrationExtension, 'address')"
+						:key="field.name"
+						class="py-1 w-full"
+						:data-registration-extension-field="field.name"
+					>
+						<FormControl
+							:type="field.type || 'text'"
+							:modelValue="registrationExtensionFieldValue(field)"
+							@update:modelValue="value => setRegistrationExtensionFieldValue(field, value)"
+							:options="registrationExtensionFieldOptions(field)"
+							variant="subtle"
+							:label="t(field.label || field.name)"
+							:placeholder="registrationExtensionFieldPlaceholder(field)"
+							:required="Boolean(field.required)"
+							:disabled="Boolean(field.disabled || field.derive)"
+						/>
+						<ErrorMessage v-if="errors[`extension_${field.name}`]" :message="errors[`extension_${field.name}`]"/>
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
@@ -220,6 +244,7 @@
 		buildPatientRegistrationParams,
 		getPatientRegistrationExtension,
 		registrationFieldValue,
+		registrationFieldsForSection,
 		registrationUrl,
 		resolveRegisteredPatient,
 	} from '@/patientRegistration'
@@ -312,6 +337,10 @@
 		return registrationExtension?.builtInFields?.[name] || {};
 	}
 
+	function registrationBuiltInVisible(name) {
+		return !registrationBuiltInConfig(name).hidden;
+	}
+
 	function registrationBuiltInRequired(name) {
 		return Boolean(
 			registrationBuiltInPresentation[name]?.required
@@ -328,12 +357,17 @@
 		return registrationBuiltInPresentation[name]?.type || 'text';
 	}
 
-	function registrationBuiltInLabel(name) {
-		return registrationBuiltInPresentation[name]?.label || name;
+	function registrationBuiltInLabel(name, fallback = name) {
+		return t(
+			registrationBuiltInConfig(name).label
+			|| registrationBuiltInPresentation[name]?.label
+			|| fallback
+		);
 	}
 
 	function registrationBuiltInPlaceholder(name) {
-		const placeholder = registrationBuiltInPresentation[name]?.placeholder;
+		const placeholder = registrationBuiltInConfig(name).placeholder
+			|| registrationBuiltInPresentation[name]?.placeholder;
 		return placeholder ? t(placeholder) : undefined;
 	}
 
@@ -357,6 +391,11 @@
 			dob: reg_dob.value,
 			age: reg_age.value,
 			maritalStatus: reg_marital_status.value,
+			addressLine1: reg_addressLine1.value,
+			addressLine2: reg_addressLine2.value,
+			city: reg_city.value,
+			state: reg_state.value,
+			zip: reg_zip.value,
 		};
 	}
 
@@ -463,12 +502,9 @@
 			errors.value.gender = "";
 		}
 		let builtInMissing = false;
-		for (const [name, value] of [
-			['lastName', reg_lastName.value],
-			['maritalStatus', reg_marital_status.value],
-			['dob', reg_dob.value],
-		]) {
-			const missing = registrationBuiltInRequired(name) && !value;
+		for (const [name, config] of Object.entries(registrationExtension?.builtInFields || {})) {
+			const value = registrationBuiltInValues()[name];
+			const missing = Boolean(config.required) && !value;
 			errors.value[name] = missing ? t('This field is required') : '';
 			builtInMissing ||= missing;
 		}

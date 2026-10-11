@@ -7,6 +7,7 @@ import {
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationFieldValue,
+	registrationFieldsForSection,
 	registrationUrl,
 	resolveRegisteredPatient,
 } from "../src/patientRegistration.js";
@@ -62,7 +63,10 @@ test("a generic layout interleaves built-in and extension fields in DOM order", 
 
 test("the native layout stays unchanged when no field layout is configured", () => {
 	const layout = buildPatientRegistrationLayout({
-		fields: [{name: "membership_kind"}],
+		fields: [
+			{name: "membership_kind"},
+			{name: "district", section: "address"},
+		],
 	});
 	assert.deepEqual(layout.map(item => item.key), [
 		"builtIn:firstName",
@@ -162,6 +166,25 @@ test("derived extension values are evaluated but need not be submitted", () => {
 	assert.equal(registrationFieldValue({name: "start"}, values), 7);
 });
 
+test("declarative fields can target native form sections without domain knowledge", () => {
+	const extension = {
+		fields: [
+			{name: "account_code"},
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+	};
+	assert.deepEqual(
+		registrationFieldsForSection(extension).map(field => field.name),
+		["account_code"],
+	);
+	assert.deepEqual(
+		registrationFieldsForSection(extension, "address").map(field => field.name),
+		["district"],
+	);
+	assert.deepEqual(registrationFieldsForSection(null, "address"), []);
+});
+
 test("the native component does not own product-specific field definitions", () => {
 	const component = readFileSync(
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
@@ -213,6 +236,18 @@ test("gender keeps a distinct visible label and selection placeholder", () => {
 		component,
 		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select Gender'/,
 	);
+});
+
+test("address fields keep their generic built-in and extension contracts", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	for (const field of ["addressLine1", "addressLine2", "city", "state", "zip"]) {
+		assert.match(component, new RegExp(`data-registration-built-in-field="${field}"`));
+	}
+	assert.match(component, /registrationBuiltInLabel\('addressLine1', 'Address Line 1'\)/);
+	assert.match(component, /registrationFieldsForSection\(registrationExtension, 'address'\)/);
 });
 
 test("both a newly created and an existing patient continue through the native modal", () => {
