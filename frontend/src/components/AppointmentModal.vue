@@ -111,17 +111,29 @@
 							class="py-1 w-full"
 							:data-registration-built-in-field="item.name"
 						>
-							<DatePicker
-								:modelValue="registrationBuiltInValue('dob')"
-								@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
-								:label="t(registrationBuiltInLabel('dob'))"
-								class="w-full"
-								variant="subtle"
-								:placeholder="t('Date of Birth')"
-								:disabled="registrationBuiltInDisabled('dob')"
-								:required="registrationBuiltInRequired('dob')"
-								:formatter="(date) => getFormat(date, '', true)"
-							/>
+							<label
+								v-registration-required="registrationBuiltInRequired('dob')"
+								class="block w-full space-y-1.5 text-xs text-ink-gray-5"
+								data-registration-date-control
+							>
+								<span class="block" data-registration-date-label>
+									{{ t(registrationBuiltInLabel('dob')) }}
+									<template v-if="registrationBuiltInRequired('dob')">
+										<span class="text-ink-red-3" aria-hidden="true"> *</span>
+										<span class="sr-only"> (required)</span>
+									</template>
+								</span>
+								<DatePicker
+									:modelValue="registrationBuiltInValue('dob')"
+									@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
+									class="w-full"
+									variant="subtle"
+									:placeholder="t('Date of Birth')"
+									:disabled="registrationBuiltInDisabled('dob')"
+									:required="registrationBuiltInRequired('dob')"
+									:formatter="(date) => getFormat(date, '', true)"
+								/>
+							</label>
 							<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
 						</div>
 						<div
@@ -229,6 +241,16 @@
 	})
 
 	const show = defineModel();
+	const setRegistrationRequired = (element, required) => {
+		const input = element.matches('input') ? element : element.querySelector('input');
+		if (!input) return;
+		input.required = Boolean(required);
+		input.setAttribute('aria-required', String(Boolean(required)));
+	};
+	const vRegistrationRequired = {
+		mounted: (element, binding) => setRegistrationRequired(element, binding.value),
+		updated: (element, binding) => setRegistrationRequired(element, binding.value),
+	};
 
 	let success_dialog = ref(false);
 	let alert_dialog = ref(false);
@@ -693,3 +715,10 @@
 		}
 	}
 </script>
+
+<style scoped>
+	[data-patient-registration-form] :deep(button[role='combobox']),
+	[data-patient-registration-form] :deep([data-slot='trigger']) {
+		width: 100%;
+	}
+</style>
