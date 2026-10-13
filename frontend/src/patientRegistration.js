@@ -27,16 +27,26 @@ export function registrationFieldValue(field, values, context = {}) {
 	return values[field?.name];
 }
 
-export function buildPatientRegistrationLayout(extension = null) {
+export function registrationFieldsForSection(extension, section = "registration") {
+	return (extension?.fields || []).filter(
+		(field) => (field.section || "registration") === section,
+	);
+}
+
+export function buildPatientRegistrationSectionLayout(
+	extension = null,
+	section = "registration",
+	builtInNames = [],
+) {
 	const fields = [
-		...BUILT_IN_REGISTRATION_FIELDS
+		...builtInNames
 			.filter(name => !extension?.builtInFields?.[name]?.hidden)
 			.map(name => ({
 				kind: "builtIn",
 				name,
 				key: `builtIn:${name}`,
 			})),
-		...(extension?.fields || [])
+		...registrationFieldsForSection(extension, section)
 			.filter(field => field?.name && !field.hidden)
 			.map(field => ({
 				kind: "extension",
@@ -46,11 +56,13 @@ export function buildPatientRegistrationLayout(extension = null) {
 			})),
 	];
 	const fieldByKey = new Map(fields.map(field => [field.key, field]));
-	if (!Array.isArray(extension?.fieldLayout)) return fields;
+	const configuredLayout = extension?.sectionLayouts?.[section]
+		?? (section === "registration" ? extension?.fieldLayout : null);
+	if (!Array.isArray(configuredLayout)) return fields;
 
 	const seen = new Set();
 	const layout = [];
-	for (const [rowIndex, row] of extension.fieldLayout.entries()) {
+	for (const [rowIndex, row] of configuredLayout.entries()) {
 		const cells = Array.isArray(row) ? row : [];
 		for (let columnIndex = 0; columnIndex < 3; columnIndex += 1) {
 			const reference = cells[columnIndex];
@@ -74,6 +86,14 @@ export function buildPatientRegistrationLayout(extension = null) {
 		...layout,
 		...fields.filter(field => !seen.has(field.key)),
 	];
+}
+
+export function buildPatientRegistrationLayout(extension = null) {
+	return buildPatientRegistrationSectionLayout(
+		extension,
+		"registration",
+		BUILT_IN_REGISTRATION_FIELDS,
+	);
 }
 
 export function buildPatientRegistrationParams(

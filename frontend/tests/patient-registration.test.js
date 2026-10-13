@@ -4,9 +4,11 @@ import test from "node:test";
 
 import {
 	buildPatientRegistrationLayout,
+	buildPatientRegistrationSectionLayout,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
 	registrationFieldValue,
+	registrationFieldsForSection,
 	registrationUrl,
 	resolveRegisteredPatient,
 } from "../src/patientRegistration.js";
@@ -60,9 +62,44 @@ test("a generic layout interleaves built-in and extension fields in DOM order", 
 	);
 });
 
+test("a section layout preserves row-major order for built-in and extension fields", () => {
+	const layout = buildPatientRegistrationSectionLayout({
+		fields: [
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+		sectionLayouts: {
+			address: [
+				[
+					{source: "builtIn", name: "state"},
+					{source: "extension", name: "district"},
+					{source: "builtIn", name: "city"},
+				],
+				[
+					{source: "builtIn", name: "addressLine1"},
+					{source: "builtIn", name: "addressLine2"},
+					{source: "builtIn", name: "zip"},
+				],
+			],
+		},
+	}, "address", ["addressLine1", "addressLine2", "city", "state", "zip"]);
+
+	assert.deepEqual(layout.map(item => item.key), [
+		"builtIn:state",
+		"extension:district",
+		"builtIn:city",
+		"builtIn:addressLine1",
+		"builtIn:addressLine2",
+		"builtIn:zip",
+	]);
+});
+
 test("the native layout stays unchanged when no field layout is configured", () => {
 	const layout = buildPatientRegistrationLayout({
-		fields: [{name: "membership_kind"}],
+		fields: [
+			{name: "membership_kind"},
+			{name: "district", section: "address"},
+		],
 	});
 	assert.deepEqual(layout.map(item => item.key), [
 		"builtIn:firstName",
@@ -162,6 +199,25 @@ test("derived extension values are evaluated but need not be submitted", () => {
 	assert.equal(registrationFieldValue({name: "start"}, values), 7);
 });
 
+test("declarative fields can target native form sections without domain knowledge", () => {
+	const extension = {
+		fields: [
+			{name: "account_code"},
+			{name: "district", section: "address"},
+			{name: "secondary_phone", section: "contact"},
+		],
+	};
+	assert.deepEqual(
+		registrationFieldsForSection(extension).map(field => field.name),
+		["account_code"],
+	);
+	assert.deepEqual(
+		registrationFieldsForSection(extension, "address").map(field => field.name),
+		["district"],
+	);
+	assert.deepEqual(registrationFieldsForSection(null, "address"), []);
+});
+
 test("the native component does not own product-specific field definitions", () => {
 	const component = readFileSync(
 		new URL("../src/components/AppointmentModal.vue", import.meta.url),
@@ -213,6 +269,28 @@ test("gender keeps a distinct visible label and selection placeholder", () => {
 	assert.match(
 		component,
 		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select Gender'/,
+	);
+});
+
+test("address fields keep their generic built-in and extension contracts", () => {
+	const component = readFileSync(
+		new URL("../src/components/AppointmentModal.vue", import.meta.url),
+		"utf8",
+	);
+	const addressSectionMarker = component.indexOf('data-registration-section="address"');
+	const addressTemplate = component.slice(
+		component.lastIndexOf("<div", addressSectionMarker),
+		component.indexOf("{{ t('Source Details') }}"),
+	);
+	assert.match(addressTemplate, /grid-cols-1 md:grid-cols-3/);
+	assert.match(addressTemplate, /v-for="item in addressLayout"/);
+	assert.match(addressTemplate, /:data-registration-built-in-field="item\.kind === 'builtIn' \? item\.name : undefined"/);
+	assert.match(addressTemplate, /:data-registration-extension-field="item\.kind === 'extension' \? item\.name : undefined"/);
+	assert.equal((addressTemplate.match(/class="w-full"/g) || []).length, 2);
+	assert.doesNotMatch(addressTemplate, /(?:^|\s)(?:order-|col-span-)/);
+	assert.match(
+		component,
+		/const addressLayout = buildPatientRegistrationSectionLayout\([\s\S]*?'address'/,
 	);
 });
 

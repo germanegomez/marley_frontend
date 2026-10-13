@@ -148,7 +148,7 @@
 								@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
 								:options="registrationBuiltInOptions(item.name)"
 								:variant="registrationBuiltInVariant(item.name)"
-								:label="t(registrationBuiltInLabel(item.name))"
+								:label="registrationBuiltInLabel(item.name)"
 								:placeholder="registrationBuiltInPlaceholder(item.name)"
 								:required="registrationBuiltInRequired(item.name)"
 								:disabled="registrationBuiltInDisabled(item.name)"
@@ -161,21 +161,54 @@
 					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Address & Contact') }}</h4>
 				</div>
 
-				<div class="grid grid-cols-3 gap-2">
-					<div class="py-1 w-full">
-						<FormControl :label="t('Address Line 1')" v-model="reg_addressLine1" type="text" variant="subtle" :disabled="false" />
-					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('City/District')" v-model="reg_city" type="text" variant="subtle" :disabled="false" />
-					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('State/Province')" v-model="reg_state" type="text" variant="subtle" :disabled="false" />
-					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('Address Line 2')" v-model="reg_addressLine2" type="text" variant="subtle" :disabled="false" />
-					</div>
-					<div class="py-1 w-full">
-						<FormControl :label="t('ZIP Code')" v-model="reg_zip" type="text" variant="subtle" :disabled="false" />
+				<div
+					class="grid grid-cols-1 md:grid-cols-3 gap-2"
+					data-registration-section="address"
+				>
+					<div
+						v-for="item in addressLayout"
+						:key="item.key"
+						:class="item.kind === 'empty' ? 'hidden md:block' : 'py-1 w-full'"
+						:data-registration-built-in-field="item.kind === 'builtIn' ? item.name : undefined"
+						:data-registration-extension-field="item.kind === 'extension' ? item.name : undefined"
+					>
+						<div
+							v-if="item.kind === 'empty'"
+							aria-hidden="true"
+							data-registration-empty-cell
+						></div>
+						<FormControl
+							v-else-if="item.kind === 'extension'"
+							:type="item.field.type || 'text'"
+							class="w-full"
+							:modelValue="registrationExtensionFieldValue(item.field)"
+							@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+							:options="registrationExtensionFieldOptions(item.field)"
+							variant="subtle"
+							:label="t(item.field.label || item.name)"
+							:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+							:required="Boolean(item.field.required)"
+							:disabled="Boolean(item.field.disabled || item.field.derive)"
+						/>
+						<FormControl
+							v-else
+							:type="registrationBuiltInType(item.name)"
+							class="w-full"
+							:modelValue="registrationBuiltInValue(item.name)"
+							@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
+							variant="subtle"
+							:label="registrationBuiltInLabel(item.name)"
+							:required="registrationBuiltInRequired(item.name)"
+							:disabled="registrationBuiltInDisabled(item.name)"
+						/>
+						<ErrorMessage
+							v-if="item.kind === 'extension' && errors[`extension_${item.name}`]"
+							:message="errors[`extension_${item.name}`]"
+						/>
+						<ErrorMessage
+							v-else-if="item.kind === 'builtIn' && errors[item.name]"
+							:message="errors[item.name]"
+						/>
 					</div>
 				</div>
 				<div class="flex gap-2 my-2">
@@ -229,6 +262,7 @@
 	import { getFormat } from '@/utils'
 	import {
 		buildPatientRegistrationLayout,
+		buildPatientRegistrationSectionLayout,
 		buildPatientRegistrationParams,
 		getPatientRegistrationExtension,
 		registrationFieldValue,
@@ -263,6 +297,11 @@
 	const selectedSlot = ref(null);
 	const registrationExtension = getPatientRegistrationExtension(window);
 	const registrationLayout = buildPatientRegistrationLayout(registrationExtension);
+	const addressLayout = buildPatientRegistrationSectionLayout(
+		registrationExtension,
+		'address',
+		['addressLine1', 'city', 'state', 'addressLine2', 'zip'],
+	);
 
 	let dialog_message = ref("");
 	let dialog_title = ref("");
@@ -275,6 +314,11 @@
 	const reg_dob = ref("");
 	const reg_marital_status = ref("");
 	const reg_age = ref(null);
+	const reg_addressLine1 = ref("");
+	const reg_addressLine2 = ref("");
+	const reg_city = ref("");
+	const reg_state = ref("");
+	const reg_zip = ref("");
 	const registrationBuiltInRefs = {
 		firstName: reg_firstName,
 		lastName: reg_lastName,
@@ -284,6 +328,11 @@
 		dob: reg_dob,
 		age: reg_age,
 		maritalStatus: reg_marital_status,
+		addressLine1: reg_addressLine1,
+		addressLine2: reg_addressLine2,
+		city: reg_city,
+		state: reg_state,
+		zip: reg_zip,
 	};
 	const registrationBuiltInPresentation = {
 		firstName: { type: 'text', label: 'First Name', required: true, variant: 'subtle' },
@@ -294,16 +343,16 @@
 		maritalStatus: { type: 'select', label: 'Marital Status', placeholder: 'Marital Status' },
 		age: { type: 'number', label: 'Age' },
 		dob: { type: 'date', label: 'Date of Birth', variant: 'subtle' },
+		addressLine1: { type: 'text', label: 'Address Line 1' },
+		addressLine2: { type: 'text', label: 'Address Line 2' },
+		city: { type: 'text', label: 'City/District' },
+		state: { type: 'text', label: 'State/Province' },
+		zip: { type: 'text', label: 'ZIP Code' },
 	};
 	const maritalStatusOptions = ['Single', 'Married', 'Divorced', 'Widow'].map(value => ({
 		label: t(value),
 		value,
 	}));
-	const reg_addressLine1 = ref("");
-	const reg_addressLine2 = ref("");
-	const reg_city = ref("");
-	const reg_state = ref("");
-	const reg_zip = ref("");
 	const reg_source = ref("");
 
 	const date = ref(props.defaults.date) || ref(new Date().toISOString().split('T')[0]);
@@ -350,12 +399,17 @@
 		return registrationBuiltInPresentation[name]?.type || 'text';
 	}
 
-	function registrationBuiltInLabel(name) {
-		return registrationBuiltInPresentation[name]?.label || name;
+	function registrationBuiltInLabel(name, fallback = name) {
+		return t(
+			registrationBuiltInConfig(name).label
+			|| registrationBuiltInPresentation[name]?.label
+			|| fallback
+		);
 	}
 
 	function registrationBuiltInPlaceholder(name) {
-		const placeholder = registrationBuiltInPresentation[name]?.placeholder;
+		const placeholder = registrationBuiltInConfig(name).placeholder
+			|| registrationBuiltInPresentation[name]?.placeholder;
 		return placeholder ? t(placeholder) : undefined;
 	}
 
@@ -379,6 +433,11 @@
 			dob: reg_dob.value,
 			age: reg_age.value,
 			maritalStatus: reg_marital_status.value,
+			addressLine1: reg_addressLine1.value,
+			addressLine2: reg_addressLine2.value,
+			city: reg_city.value,
+			state: reg_state.value,
+			zip: reg_zip.value,
 		};
 	}
 
@@ -485,12 +544,9 @@
 			errors.value.gender = "";
 		}
 		let builtInMissing = false;
-		for (const [name, value] of [
-			['lastName', reg_lastName.value],
-			['maritalStatus', reg_marital_status.value],
-			['dob', reg_dob.value],
-		]) {
-			const missing = registrationBuiltInRequired(name) && !value;
+		for (const [name, config] of Object.entries(registrationExtension?.builtInFields || {})) {
+			const value = registrationBuiltInValues()[name];
+			const missing = Boolean(config.required) && !value;
 			errors.value[name] = missing ? t('This field is required') : '';
 			builtInMissing ||= missing;
 		}
