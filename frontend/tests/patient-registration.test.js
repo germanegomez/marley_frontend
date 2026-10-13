@@ -9,6 +9,18 @@ import {
 	buildPatientRegistrationSectionLayout,
 	buildPatientRegistrationParams,
 	getPatientRegistrationExtension,
+	registrationActionDependsOn,
+	registrationActionError,
+	registrationActionFingerprint,
+	registrationActionParams,
+	registrationActionReady,
+	registrationActionResultIsCurrent,
+	registrationActionResultRows,
+	registrationActionShouldStart,
+	registrationActionVisible,
+	registrationActions,
+	registrationActionsForField,
+	registrationActionUpdates,
 	registrationFieldDisabled,
 	registrationFieldOptions,
 	registrationFieldRequired,
@@ -100,6 +112,99 @@ test("a section layout preserves row-major order for built-in and extension fiel
 		"builtIn:addressLine2",
 		"builtIn:zip",
 	]);
+});
+
+test("declarative actions select explicit triggers and dependencies", () => {
+	const extension = {
+		actions: [
+			{
+				name: "lookup",
+				url: "/lookup",
+				dependsOn: ["kind", "code"],
+				trigger: { fields: ["code"], events: ["blur", "confirm"] },
+			},
+			{ name: "invalid-without-url" },
+		],
+	};
+	assert.deepEqual(registrationActions(extension).map(action => action.name), ["lookup"]);
+	assert.equal(registrationActionDependsOn(extension.actions[0], "kind"), true);
+	assert.equal(registrationActionDependsOn(extension.actions[0], "other"), false);
+	assert.deepEqual(
+		registrationActionsForField(extension, "code", "blur").map(action => action.name),
+		["lookup"],
+	);
+	assert.deepEqual(registrationActionsForField(extension, "code", "change"), []);
+});
+
+test("declarative actions preserve entered values and apply only configured updates", () => {
+	const action = {
+		name: "lookup",
+		url: "/lookup",
+		dependsOn: ["kind", "code"],
+		when: values => Boolean(values.kind && values.code),
+		fingerprint: values => `${values.kind.value}:${values.code}`,
+		params: (values, context) => ({
+			kind: values.kind.value,
+			code: values.code,
+			tenant: context.options.tenant,
+		}),
+		applyResponse: response => ({ validation_id: response.id }),
+		result: {
+			rows: [
+				{ label: "Status", value: "status" },
+				{ label: "Hidden", value: "hidden", visible: false },
+			],
+		},
+	};
+	const values = {
+		kind: { label: "Member", value: "member" },
+		code: "A-1",
+		modality: "A confirmar",
+		insurance_payor: "Hominis",
+		insurance_plan: "Plan elegido",
+	};
+	const before = structuredClone(values);
+	const context = { options: { tenant: "north" } };
+
+	assert.equal(registrationActionReady(action, values, context), true);
+	assert.equal(registrationActionFingerprint(action, values, context), "member:A-1");
+	assert.deepEqual(registrationActionParams(action, values, context), {
+		kind: "member",
+		code: "A-1",
+		tenant: "north",
+	});
+	assert.deepEqual(
+		registrationActionUpdates(action, { id: "VAL-1" }, values, context),
+		{ validation_id: "VAL-1" },
+	);
+	assert.deepEqual(values, before);
+	assert.deepEqual(
+		registrationActionResultRows(
+			action,
+			{ status: "ok", hidden: "secret" },
+			values,
+			context,
+		),
+		[{ label: "Status", value: "ok" }],
+	);
+});
+
+test("declarative actions deduplicate requests and reject stale responses", () => {
+	const pending = { fingerprint: "member:A-1", loading: true, response: null, error: "" };
+	assert.equal(registrationActionShouldStart(pending, "member:A-1"), false);
+	assert.equal(registrationActionShouldStart(pending, "member:A-2"), true);
+	assert.equal(registrationActionShouldStart({}, ""), false);
+	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-1"), true);
+	assert.equal(registrationActionResultIsCurrent(5, 4, "member:A-1", "member:A-1"), false);
+	assert.equal(registrationActionResultIsCurrent(4, 4, "member:A-1", "member:A-2"), false);
+	assert.equal(registrationActionError({ messages: ["Safe message"] }), "Safe message");
+});
+
+test("an action panel has no inactive state footprint", () => {
+	assert.equal(registrationActionVisible({ loading: false, response: null, error: "" }), false);
+	assert.equal(registrationActionVisible({ loading: true, response: null, error: "" }), true);
+	assert.equal(registrationActionVisible({ loading: false, response: { status: "ok" }, error: "" }), true);
+	assert.equal(registrationActionVisible({ loading: false, response: null, error: "Failure" }), true);
 });
 
 test("the native layout stays unchanged when no field layout is configured", () => {
