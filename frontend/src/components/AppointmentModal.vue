@@ -89,10 +89,27 @@
 						></div>
 						<div
 							v-else-if="item.kind === 'extension'"
+							v-show="registrationExtensionFieldVisible(item.field)"
 							class="py-1 w-full"
 							:data-registration-extension-field="item.name"
 						>
+							<label v-if="item.field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
+								<span>
+									{{ t(item.field.label || item.name) }}
+									<span v-if="registrationExtensionFieldRequired(item.field)" class="text-ink-red-3"> *</span>
+								</span>
+								<DatePicker
+									:modelValue="registrationExtensionFieldValue(item.field)"
+									@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+									variant="subtle"
+									:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+									:required="registrationExtensionFieldRequired(item.field)"
+									:disabled="registrationExtensionFieldDisabled(item.field)"
+									:formatter="(date) => getFormat(date, '', true)"
+								/>
+							</label>
 							<FormControl
+								v-else
 								:type="item.field.type || 'text'"
 								class="w-full"
 								:modelValue="registrationExtensionFieldValue(item.field)"
@@ -101,8 +118,8 @@
 								variant="subtle"
 								:label="t(item.field.label || item.name)"
 								:placeholder="registrationExtensionFieldPlaceholder(item.field)"
-								:required="Boolean(item.field.required)"
-								:disabled="Boolean(item.field.disabled || item.field.derive)"
+								:required="registrationExtensionFieldRequired(item.field)"
+								:disabled="registrationExtensionFieldDisabled(item.field)"
 							/>
 							<ErrorMessage v-if="errors[`extension_${item.name}`]" :message="errors[`extension_${item.name}`]"/>
 						</div>
@@ -157,6 +174,71 @@
 						</div>
 					</template>
 				</div>
+				<template
+					v-for="section in registrationSectionsForPlacement(registrationExtension, 'before-address')"
+					:key="section.name"
+				>
+					<div class="flex gap-2 my-2" :data-registration-extension-section="section.name">
+						<div>
+							<h4
+								class="py-2 font-semibold text-lg text-ink-gray-8"
+								:class="{ 'mb-2': !section.description }"
+							>{{ t(section.label || section.name) }}</h4>
+							<p v-if="section.description" class="text-sm text-ink-gray-5">{{ t(section.description) }}</p>
+						</div>
+					</div>
+					<div
+						class="grid grid-cols-1 md:grid-cols-3 gap-2 pb-2"
+						:data-registration-section="section.name"
+					>
+						<div
+							v-for="item in registrationSectionLayout(section)"
+							v-show="item.kind === 'empty' || registrationExtensionFieldVisible(item.field)"
+							:key="item.key"
+							:class="item.kind === 'empty' ? 'hidden md:block' : 'py-1 w-full'"
+							:data-registration-extension-field="item.kind === 'extension' ? item.name : undefined"
+						>
+							<div
+								v-if="item.kind === 'empty'"
+								aria-hidden="true"
+								data-registration-empty-cell
+							></div>
+							<label v-else-if="item.field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
+								<span>
+									{{ t(item.field.label || item.name) }}
+									<span v-if="registrationExtensionFieldRequired(item.field)" class="text-ink-red-3"> *</span>
+								</span>
+								<DatePicker
+									:modelValue="registrationExtensionFieldValue(item.field)"
+									@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+									class="w-full"
+									variant="subtle"
+									:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+									:required="registrationExtensionFieldRequired(item.field)"
+									:disabled="registrationExtensionFieldDisabled(item.field)"
+									:formatter="(date) => getFormat(date, '', true)"
+								/>
+							</label>
+							<FormControl
+								v-else
+								:type="item.field.type || 'text'"
+								class="w-full"
+								:modelValue="registrationExtensionFieldValue(item.field)"
+								@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
+								:options="registrationExtensionFieldOptions(item.field)"
+								variant="subtle"
+								:label="t(item.field.label || item.name)"
+								:placeholder="registrationExtensionFieldPlaceholder(item.field)"
+								:required="registrationExtensionFieldRequired(item.field)"
+								:disabled="registrationExtensionFieldDisabled(item.field)"
+							/>
+							<ErrorMessage
+								v-if="item.kind === 'extension' && errors[`extension_${item.name}`]"
+								:message="errors[`extension_${item.name}`]"
+							/>
+						</div>
+					</div>
+				</template>
 				<div class="flex gap-2 my-2">
 					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Address & Contact') }}</h4>
 				</div>
@@ -261,11 +343,19 @@
 	import { createResource, Switch, DatePicker, ErrorMessage } from "frappe-ui"
 	import { getFormat } from '@/utils'
 	import {
+		appointmentUrl,
+		buildPatientAppointmentParams,
 		buildPatientRegistrationLayout,
 		buildPatientRegistrationSectionLayout,
 		buildPatientRegistrationParams,
 		getPatientRegistrationExtension,
+		registrationFieldDisabled,
+		registrationFieldOptions,
+		registrationFieldRequired,
 		registrationFieldValue,
+		registrationFieldVisible,
+		registrationSectionsForPlacement,
+		registrationResponseError,
 		registrationUrl,
 		resolveRegisteredPatient,
 	} from '@/patientRegistration'
@@ -302,6 +392,12 @@
 		'address',
 		['addressLine1', 'city', 'state', 'addressLine2', 'zip'],
 	);
+	function registrationSectionLayout(section) {
+		return buildPatientRegistrationSectionLayout(
+			registrationExtension,
+			section.name,
+		);
+	}
 
 	let dialog_message = ref("");
 	let dialog_title = ref("");
@@ -442,7 +538,10 @@
 	}
 
 	function registrationDeriveContext() {
-		return { options: registrationExtensionOptions.value };
+		return {
+			options: registrationExtensionOptions.value,
+			builtIn: registrationBuiltInValues(),
+		};
 	}
 
 	function registrationBuiltInValue(name) {
@@ -460,10 +559,38 @@
 	}
 
 	function registrationExtensionFieldOptions(field) {
-		const values = field.options || registrationExtensionOptions.value[field.optionsKey] || [];
+		const values = registrationFieldOptions(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
 		return values.map(value => (
 			typeof value === 'object' ? value : { label: t(value), value }
 		));
+	}
+
+	function registrationExtensionFieldVisible(field) {
+		return registrationFieldVisible(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
+	}
+
+	function registrationExtensionFieldRequired(field) {
+		return registrationFieldRequired(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
+	}
+
+	function registrationExtensionFieldDisabled(field) {
+		return registrationFieldDisabled(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
 	}
 
 	function registrationExtensionFieldPlaceholder(field) {
@@ -509,6 +636,13 @@
 				}, registrationExtension, registrationExtensionValues);
 			},
 			onSuccess(response) {
+				const responseError = registrationResponseError(response, registrationExtension);
+				if (responseError) {
+					patients.fetch();
+					registration_loader.value = false;
+					errors.value.registration_error = responseError;
+					return;
+				}
 				const patient = resolveRegisteredPatient(response);
 				if (patient) {
 					patients.fetch();
@@ -553,7 +687,8 @@
 		let extensionMissing = false;
 		for (const field of registrationExtension?.fields || []) {
 			const value = registrationExtensionFieldValue(field);
-			const missing = field.required && (value === null || value === undefined || value === '');
+			const missing = registrationExtensionFieldRequired(field)
+				&& (value === null || value === undefined || value === '');
 			errors.value[`extension_${field.name}`] = missing ? t('This field is required') : '';
 			extensionMissing ||= missing;
 		}
@@ -596,17 +731,15 @@
 	};
 
 	const make_appointment = createResource({
-		url: "/api/method/marley_frontend.waitlist.patient_appointment",
+		url: appointmentUrl(registrationExtension),
 		method: "POST",
 		makeParams() {
-			return {
-				from_kiosk: false,
-				appointment_type: appointment_type?.value || null,
-				practitioner: practitioner?.value?.value || null,
-				patient: book_patient?.value?.value || null,
+			return buildPatientAppointmentParams({
+				appointmentType: appointment_type?.value,
+				practitioner: practitioner?.value,
 				date: date.value,
 				slot: selectedSlot.value,
-			};
+			}, registrationExtension, book_patient?.value);
 		},
 		onSuccess() {
 			booking_loader.value = false;
@@ -671,7 +804,9 @@
 				for (const field of registrationExtension.fields) {
 					const options = registrationExtensionFieldOptions(field);
 					if (field.default !== undefined) {
-						registrationExtensionValues[field.name] = field.default;
+						registrationExtensionValues[field.name] = typeof field.default === 'function'
+							? field.default(registrationExtensionValues, registrationDeriveContext())
+							: field.default;
 					} else if (field.defaultFromSingleOption && options.length === 1) {
 						registrationExtensionValues[field.name] = options[0].value;
 					}
