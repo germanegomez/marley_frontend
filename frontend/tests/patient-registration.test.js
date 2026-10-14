@@ -22,7 +22,9 @@ import {
 	registrationActionsForField,
 	registrationActionUpdates,
 	registrationFieldDisabled,
+	registrationFieldDescription,
 	registrationFieldOptions,
+	registrationFieldPlaceholder,
 	registrationFieldRequired,
 	registrationFieldValue,
 	registrationFieldVisible,
@@ -353,6 +355,8 @@ test("field state and options can depend on other extension values", () => {
 		options: (current, currentContext) => currentContext.options.plans.filter(
 			option => option.kind === current.kind,
 		),
+		placeholder: current => current.kind === "Member" ? "Select plan" : "",
+		description: current => current.kind ? "" : "Select a membership first",
 	};
 	assert.equal(registrationFieldVisible(field, values, context), true);
 	assert.equal(registrationFieldRequired(field, values, context), true);
@@ -360,6 +364,13 @@ test("field state and options can depend on other extension values", () => {
 	assert.deepEqual(registrationFieldOptions(field, values, context), [
 		{label: "Plan A", value: "A", kind: "Member"},
 	]);
+	assert.equal(registrationFieldPlaceholder(field, values, context), "Select plan");
+	assert.equal(registrationFieldDescription(field, values, context), "");
+	assert.equal(
+		registrationFieldDescription(field, {kind: ""}, context),
+		"Select a membership first",
+	);
+	assert.equal(registrationFieldPlaceholder({name: "plain"}, values, context), "");
 	assert.equal(registrationFieldVisible({...field, hidden: true}, values, context), false);
 });
 
@@ -430,6 +441,8 @@ test("registration controls fill their grid cells without changing layout order"
 		"utf8",
 	);
 	assert.match(component, /data-patient-registration-form/);
+	assert.match(component, /Fields marked with \* are required/);
+	assert.match(component, /grid grid-cols-1 md:grid-cols-3 gap-2 pb-2/);
 	assert.match(component, /data-registration-empty-cell/);
 	assert.match(component, /registrationSectionsForPlacement\(registrationExtension, 'before-address'\)/);
 	assert.match(component, /registrationSectionLayout\(section\)/);
@@ -444,6 +457,14 @@ test("registration controls fill their grid cells without changing layout order"
 		component,
 		/\[data-patient-registration-form\][\s\S]*?:deep\(\[data-slot='trigger'\]\)[\s\S]*?width:\s*100%/,
 	);
+	assert.match(component, /v-registration-control=/);
+	assert.match(component, /aria-describedby/);
+	assert.match(component, /aria-required/);
+	assert.match(component, /aria-disabled/);
+	assert.match(component, /text\.textContent = `\(\$\{t\('required'\)\}\)`/);
+	assert.match(component, /const missing = registrationBuiltInRequired\(name\) && !value/);
+	assert.match(component, /label: t\('Select an option'\), value: '', disabled: true/);
+	assert.match(component, /--ink-gray-6, #525252/);
 });
 
 test("birth date uses the shared date-control label and spacing contract", () => {
@@ -485,7 +506,7 @@ test("gender keeps a distinct visible label and selection placeholder", () => {
 	);
 	assert.match(
 		component,
-		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select Gender'/,
+		/gender: \{ type: 'select', label: 'Gender', placeholder: 'Select'/,
 	);
 });
 

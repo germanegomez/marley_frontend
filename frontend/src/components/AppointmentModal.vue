@@ -79,24 +79,42 @@
 			</div>
 
 			<!-- Registration fields -->
-			<div v-if="is_new_patient" data-patient-registration-form>
-				<div class="grid grid-cols-3 gap-2 pb-2" data-patient-registration-grid>
+			<div
+				v-if="is_new_patient"
+				role="group"
+				:aria-label="t('New Patient')"
+				aria-describedby="patient-registration-required-note"
+				data-patient-registration-form
+			>
+				<p
+					id="patient-registration-required-note"
+					class="mb-2 text-sm text-ink-gray-7"
+					data-registration-required-note
+				>
+					{{ t('Fields marked with * are required') }}
+				</p>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 pb-2" data-patient-registration-grid>
 					<template v-for="item in registrationLayout" :key="item.key">
 						<div
 							v-if="item.kind === 'empty'"
+							class="hidden md:block"
 							aria-hidden="true"
 							data-registration-empty-cell
 						></div>
 						<div
 							v-else-if="item.kind === 'extension'"
 							v-show="registrationExtensionFieldVisible(item.field)"
+							v-registration-control="registrationExtensionFieldAccessibility(item.field)"
 							class="py-1 w-full"
 							:data-registration-extension-field="item.name"
 						>
 							<label v-if="item.field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
 								<span>
 									{{ t(item.field.label || item.name) }}
-									<span v-if="registrationExtensionFieldRequired(item.field)" class="text-ink-red-3"> *</span>
+									<template v-if="registrationExtensionFieldRequired(item.field)">
+										<span class="text-ink-red-3" aria-hidden="true"> *</span>
+										<span class="sr-only"> ({{ t('required') }})</span>
+									</template>
 								</span>
 								<DatePicker
 									:modelValue="registrationExtensionFieldValue(item.field)"
@@ -123,10 +141,22 @@
 								:required="registrationExtensionFieldRequired(item.field)"
 								:disabled="registrationExtensionFieldDisabled(item.field)"
 							/>
-							<ErrorMessage v-if="errors[`extension_${item.name}`]" :message="errors[`extension_${item.name}`]"/>
+							<p
+								v-if="registrationExtensionFieldDescription(item.field)"
+								:id="registrationFieldDescriptionId(item.name)"
+								class="registration-help mt-1 text-xs"
+							>
+								{{ registrationExtensionFieldDescription(item.field) }}
+							</p>
+							<ErrorMessage
+								v-if="errors[`extension_${item.name}`]"
+								:id="registrationFieldErrorId(item.name)"
+								:message="errors[`extension_${item.name}`]"
+							/>
 						</div>
 						<div
 							v-else-if="item.name === 'dob'"
+							v-registration-control="registrationBuiltInAccessibility(item.name)"
 							class="py-1 w-full"
 							:data-registration-built-in-field="item.name"
 						>
@@ -139,7 +169,7 @@
 									{{ t(registrationBuiltInLabel('dob')) }}
 									<template v-if="registrationBuiltInRequired('dob')">
 										<span class="text-ink-red-3" aria-hidden="true"> *</span>
-										<span class="sr-only"> (required)</span>
+										<span class="sr-only"> ({{ t('required') }})</span>
 									</template>
 								</span>
 								<DatePicker
@@ -147,16 +177,28 @@
 									@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
 									class="w-full"
 									variant="subtle"
-									:placeholder="t('Date of Birth')"
+									:placeholder="registrationBuiltInPlaceholder('dob')"
 									:disabled="registrationBuiltInDisabled('dob')"
 									:required="registrationBuiltInRequired('dob')"
 									:formatter="(date) => getFormat(date, '', true)"
 								/>
 							</label>
-							<ErrorMessage v-if="errors.dob" :message="errors.dob"/>
+							<p
+								v-if="registrationBuiltInDescription(item.name)"
+								:id="registrationFieldDescriptionId(item.name)"
+								class="registration-help mt-1 text-xs"
+							>
+								{{ registrationBuiltInDescription(item.name) }}
+							</p>
+							<ErrorMessage
+								v-if="errors.dob"
+								:id="registrationFieldErrorId(item.name)"
+								:message="errors.dob"
+							/>
 						</div>
 						<div
 							v-else
+							v-registration-control="registrationBuiltInAccessibility(item.name)"
 							class="py-1 w-full"
 							:data-registration-built-in-field="item.name"
 						>
@@ -172,7 +214,18 @@
 								:required="registrationBuiltInRequired(item.name)"
 								:disabled="registrationBuiltInDisabled(item.name)"
 							/>
-							<ErrorMessage v-if="errors[item.name]" :message="errors[item.name]"/>
+							<p
+								v-if="registrationBuiltInDescription(item.name)"
+								:id="registrationFieldDescriptionId(item.name)"
+								class="registration-help mt-1 text-xs"
+							>
+								{{ registrationBuiltInDescription(item.name) }}
+							</p>
+							<ErrorMessage
+								v-if="errors[item.name]"
+								:id="registrationFieldErrorId(item.name)"
+								:message="errors[item.name]"
+							/>
 						</div>
 					</template>
 				</div>
@@ -196,6 +249,7 @@
 						<div
 							v-for="item in registrationSectionLayout(section)"
 							v-show="item.kind === 'empty' || registrationExtensionFieldVisible(item.field)"
+							v-registration-control="item.kind === 'extension' ? registrationExtensionFieldAccessibility(item.field) : null"
 							:key="item.key"
 							:class="item.kind === 'empty' ? 'hidden md:block' : 'py-1 w-full'"
 							:data-registration-extension-field="item.kind === 'extension' ? item.name : undefined"
@@ -208,7 +262,10 @@
 							<label v-else-if="item.field.type === 'date'" class="mb-1.5 block text-xs text-ink-gray-5">
 								<span>
 									{{ t(item.field.label || item.name) }}
-									<span v-if="registrationExtensionFieldRequired(item.field)" class="text-ink-red-3"> *</span>
+									<template v-if="registrationExtensionFieldRequired(item.field)">
+										<span class="text-ink-red-3" aria-hidden="true"> *</span>
+										<span class="sr-only"> ({{ t('required') }})</span>
+									</template>
 								</span>
 								<DatePicker
 									:modelValue="registrationExtensionFieldValue(item.field)"
@@ -236,8 +293,16 @@
 								:required="registrationExtensionFieldRequired(item.field)"
 								:disabled="registrationExtensionFieldDisabled(item.field)"
 							/>
+							<p
+								v-if="item.kind === 'extension' && registrationExtensionFieldDescription(item.field)"
+								:id="registrationFieldDescriptionId(item.name)"
+								class="registration-help mt-1 text-xs"
+							>
+								{{ registrationExtensionFieldDescription(item.field) }}
+							</p>
 							<ErrorMessage
 								v-if="item.kind === 'extension' && errors[`extension_${item.name}`]"
+								:id="registrationFieldErrorId(item.name)"
 								:message="errors[`extension_${item.name}`]"
 							/>
 						</div>
@@ -299,6 +364,7 @@
 					<div
 						v-for="item in addressLayout"
 						:key="item.key"
+						v-registration-control="registrationAddressFieldAccessibility(item)"
 						:class="item.kind === 'empty' ? 'hidden md:block' : 'py-1 w-full'"
 						:data-registration-built-in-field="item.kind === 'builtIn' ? item.name : undefined"
 						:data-registration-extension-field="item.kind === 'extension' ? item.name : undefined"
@@ -330,15 +396,32 @@
 							@update:modelValue="value => setRegistrationBuiltInValue(item.name, value)"
 							variant="subtle"
 							:label="registrationBuiltInLabel(item.name)"
+							:placeholder="registrationBuiltInPlaceholder(item.name)"
 							:required="registrationBuiltInRequired(item.name)"
 							:disabled="registrationBuiltInDisabled(item.name)"
 						/>
+						<p
+							v-if="item.kind === 'extension' && registrationExtensionFieldDescription(item.field)"
+							:id="registrationFieldDescriptionId(item.name)"
+							class="registration-help mt-1 text-xs"
+						>
+							{{ registrationExtensionFieldDescription(item.field) }}
+						</p>
+						<p
+							v-else-if="item.kind === 'builtIn' && registrationBuiltInDescription(item.name)"
+							:id="registrationFieldDescriptionId(item.name)"
+							class="registration-help mt-1 text-xs"
+						>
+							{{ registrationBuiltInDescription(item.name) }}
+						</p>
 						<ErrorMessage
 							v-if="item.kind === 'extension' && errors[`extension_${item.name}`]"
+							:id="registrationFieldErrorId(item.name)"
 							:message="errors[`extension_${item.name}`]"
 						/>
 						<ErrorMessage
 							v-else-if="item.kind === 'builtIn' && errors[item.name]"
+							:id="registrationFieldErrorId(item.name)"
 							:message="errors[item.name]"
 						/>
 					</div>
@@ -346,11 +429,28 @@
 				<div class="flex gap-2 my-2">
 					<h4 class="py-2 font-semibold text-lg mb-2 text-ink-gray-8">{{ t('Source Details') }}</h4>
 				</div>
-				<div class="grid grid-cols-3 gap-2">
-					<div class="py-1 w-full">
-						<FormControl :label="t('Source')" v-model="reg_source" type="select" :options="source_options" variant="subtle" :disabled="false"/>
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+					<div
+						v-registration-control="registrationSourceAccessibility('source')"
+						class="py-1 w-full"
+						data-registration-built-in-field="source"
+					>
+						<FormControl
+							:label="t('Source')"
+							:placeholder="t('Select an option')"
+							v-model="reg_source"
+							type="select"
+							:options="source_options"
+							variant="subtle"
+							:disabled="false"
+						/>
 					</div>
-					<div v-if="reg_source == 'Employee'" class="py-1 w-full">
+					<div
+						v-if="reg_source == 'Employee'"
+						v-registration-control="registrationSourceAccessibility('employee')"
+						class="py-1 w-full"
+						data-registration-built-in-field="employee"
+					>
 						<FormControl :label="t('Employee')" v-model="reg_employee" type="autocomplete" :options="employee_options" variant="subtle" :disabled="false" />
 					</div>
 				</div>
@@ -412,7 +512,9 @@
 		registrationActionsForField,
 		registrationActionUpdates,
 		registrationFieldDisabled,
+		registrationFieldDescription,
 		registrationFieldOptions,
+		registrationFieldPlaceholder,
 		registrationFieldRequired,
 		registrationFieldValue,
 		registrationFieldVisible,
@@ -436,6 +538,43 @@
 	const vRegistrationRequired = {
 		mounted: (element, binding) => setRegistrationRequired(element, binding.value),
 		updated: (element, binding) => setRegistrationRequired(element, binding.value),
+	};
+	const registrationFieldBaseId = name => (
+		`patient-registration-${String(name || 'field').replace(/[^a-zA-Z0-9_-]/g, '-')}`
+	);
+	const setRegistrationControlAccessibility = (element, configuration) => {
+		if (!configuration) return;
+		const control = element.querySelector(
+			'input:not([type="hidden"]), select, textarea, button[role="combobox"], button',
+		);
+		if (!control) return;
+		const baseId = registrationFieldBaseId(configuration.name);
+		const label = element.querySelector('label');
+		const labelId = `${baseId}-label`;
+		if (!control.id) control.id = `${baseId}-control`;
+		if (label) {
+			label.id = labelId;
+			label.setAttribute('for', control.id);
+			for (const text of label.querySelectorAll('.sr-only')) {
+				if (/^\(?required\)?$/i.test(text.textContent?.trim() || '')) {
+					text.textContent = `(${t('required')})`;
+				}
+			}
+			control.setAttribute('aria-labelledby', labelId);
+		}
+		const describedBy = (configuration.describedBy || []).filter(Boolean).join(' ');
+		if (describedBy) control.setAttribute('aria-describedby', describedBy);
+		else control.removeAttribute('aria-describedby');
+		const required = Boolean(configuration.required);
+		control.setAttribute('aria-required', String(required));
+		if ('required' in control) control.required = required;
+		const disabled = Boolean(configuration.disabled);
+		control.setAttribute('aria-disabled', String(disabled));
+		if ('disabled' in control) control.disabled = disabled;
+	};
+	const vRegistrationControl = {
+		mounted: (element, binding) => setRegistrationControlAccessibility(element, binding.value),
+		updated: (element, binding) => setRegistrationControlAccessibility(element, binding.value),
 	};
 
 	let success_dialog = ref(false);
@@ -497,8 +636,8 @@
 		lastName: { type: 'text', label: 'Last Name', variant: 'subtle' },
 		contactNumber: { type: 'text', label: 'Contact Number', required: true, variant: 'subtle' },
 		email: { type: 'text', label: 'Email ID' },
-		gender: { type: 'select', label: 'Gender', placeholder: 'Select Gender', required: true, variant: 'subtle' },
-		maritalStatus: { type: 'select', label: 'Marital Status', placeholder: 'Marital Status' },
+		gender: { type: 'select', label: 'Gender', placeholder: 'Select', required: true, variant: 'subtle' },
+		maritalStatus: { type: 'select', label: 'Marital Status', placeholder: 'Select' },
 		age: { type: 'number', label: 'Age' },
 		dob: { type: 'date', label: 'Date of Birth', variant: 'subtle' },
 		addressLine1: { type: 'text', label: 'Address Line 1' },
@@ -555,7 +694,9 @@
 	}
 
 	function registrationBuiltInType(name) {
-		return registrationBuiltInPresentation[name]?.type || 'text';
+		return registrationBuiltInConfig(name).type
+			|| registrationBuiltInPresentation[name]?.type
+			|| 'text';
 	}
 
 	function registrationBuiltInLabel(name, fallback = name) {
@@ -577,9 +718,24 @@
 	}
 
 	function registrationBuiltInOptions(name) {
-		if (name === 'gender') return genderOptions.value;
-		if (name === 'maritalStatus') return maritalStatusOptions;
-		return undefined;
+		let options;
+		if (name === 'gender') options = genderOptions.value;
+		else if (name === 'maritalStatus') options = maritalStatusOptions;
+		else return undefined;
+		const prompt = registrationBuiltInPlaceholder(name);
+		if (!prompt) return options;
+		return [
+			{ label: prompt, value: '', disabled: true },
+			...options.filter(option => option?.value !== ''),
+		];
+	}
+
+	function registrationBuiltInDescription(name) {
+		const configured = registrationBuiltInConfig(name).description;
+		const description = typeof configured === 'function'
+			? configured(registrationBuiltInValues(), registrationDeriveContext())
+			: configured;
+		return description ? t(description) : '';
 	}
 
 	function registrationBuiltInValues() {
@@ -629,9 +785,14 @@
 			registrationExtensionValues,
 			registrationDeriveContext(),
 		);
-		return values.map(value => (
+		const options = values.map(value => (
 			typeof value === 'object' ? value : { label: t(value), value }
 		));
+		if (!field.prompt) return options;
+		return [
+			{ label: t(field.prompt), value: '', disabled: true },
+			...options.filter(option => option?.value !== ''),
+		];
 	}
 
 	function registrationExtensionFieldVisible(field) {
@@ -667,10 +828,71 @@
 
 	function registrationExtensionFieldPlaceholder(field) {
 		const placeholder = registrationExtensionOptions.value[field.placeholderKey]
-			|| field.placeholder
-			|| field.label
-			|| field.name;
-		return t(placeholder);
+			|| registrationFieldPlaceholder(
+				field,
+				registrationExtensionValues,
+				registrationDeriveContext(),
+			);
+		return placeholder ? t(placeholder) : undefined;
+	}
+
+	function registrationExtensionFieldDescription(field) {
+		const description = registrationFieldDescription(
+			field,
+			registrationExtensionValues,
+			registrationDeriveContext(),
+		);
+		return description ? t(description) : '';
+	}
+
+	function registrationFieldDescriptionId(name) {
+		return `${registrationFieldBaseId(name)}-description`;
+	}
+
+	function registrationFieldErrorId(name) {
+		return `${registrationFieldBaseId(name)}-error`;
+	}
+
+	function registrationAccessibility(name, required, description, error, disabled = false) {
+		return {
+			name,
+			required,
+			disabled,
+			describedBy: [
+				description ? registrationFieldDescriptionId(name) : '',
+				error ? registrationFieldErrorId(name) : '',
+			],
+		};
+	}
+
+	function registrationBuiltInAccessibility(name) {
+		return registrationAccessibility(
+			name,
+			registrationBuiltInRequired(name),
+			registrationBuiltInDescription(name),
+			errors.value[name],
+			registrationBuiltInDisabled(name),
+		);
+	}
+
+	function registrationExtensionFieldAccessibility(field) {
+		return registrationAccessibility(
+			field.name,
+			registrationExtensionFieldRequired(field),
+			registrationExtensionFieldDescription(field),
+			errors.value[`extension_${field.name}`],
+			registrationExtensionFieldDisabled(field),
+		);
+	}
+
+	function registrationAddressFieldAccessibility(item) {
+		if (item.kind === 'extension') return registrationExtensionFieldAccessibility(item.field);
+		if (item.kind === 'builtIn') return registrationBuiltInAccessibility(item.name);
+		return null;
+	}
+
+	function registrationSourceAccessibility(name) {
+		return registrationAccessibility(name, false, '', '');
 	}
 
 	function registrationExtensionFieldValue(field) {
@@ -886,9 +1108,9 @@
 			errors.value.gender = "";
 		}
 		let builtInMissing = false;
-		for (const [name, config] of Object.entries(registrationExtension?.builtInFields || {})) {
+		for (const name of Object.keys(registrationExtension?.builtInFields || {})) {
 			const value = registrationBuiltInValues()[name];
-			const missing = Boolean(config.required) && !value;
+			const missing = registrationBuiltInRequired(name) && !value;
 			errors.value[name] = missing ? t('This field is required') : '';
 			builtInMissing ||= missing;
 		}
@@ -1033,7 +1255,10 @@
 		onSuccess(response) {
 			practitionerOptions.value = response.practitioners;
 			employee_options.value = response.employee_options;
-			source_options.value = response.source_options;
+			source_options.value = [
+				{ label: t('Select an option'), value: '', disabled: true },
+				...(response.source_options || []).filter(option => option?.value !== ''),
+			];
 		},
 		onError: (error) => {
 			dialog_message = error.messages?.[0] || error;
@@ -1119,5 +1344,20 @@
 	[data-patient-registration-form] :deep(button[role='combobox']),
 	[data-patient-registration-form] :deep([data-slot='trigger']) {
 		width: 100%;
+	}
+
+	[data-patient-registration-form] :deep(label),
+	[data-patient-registration-form] .registration-help,
+	[data-patient-registration-form] [data-registration-required-note] {
+		color: var(--ink-gray-6, #525252);
+	}
+
+	[data-patient-registration-form] :deep(input::placeholder) {
+		color: var(--ink-gray-6, #525252);
+		opacity: 1;
+	}
+
+	[data-patient-registration-form] :deep(.text-ink-gray-4) {
+		color: var(--ink-gray-6, #525252);
 	}
 </style>

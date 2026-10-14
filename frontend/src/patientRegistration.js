@@ -62,6 +62,19 @@ export function registrationFieldDisabled(field, values, context = {}) {
 	);
 }
 
+export function registrationFieldPlaceholder(field, values, context = {}) {
+	return evaluateSetting(
+		field?.placeholder,
+		values,
+		context,
+		"",
+	);
+}
+
+export function registrationFieldDescription(field, values, context = {}) {
+	return evaluateSetting(field?.description, values, context, "");
+}
+
 export function registrationFieldOptions(field, values, context = {}) {
 	const configured = evaluateSetting(field?.options, values, context, undefined);
 	if (configured !== undefined) return configured || [];
