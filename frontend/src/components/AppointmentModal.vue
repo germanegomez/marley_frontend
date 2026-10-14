@@ -313,7 +313,7 @@
 					:key="action.name"
 				>
 					<div
-						v-if="registrationActionVisible(registrationActionState(action))"
+						v-if="registrationActionVisible(registrationActionState(action), action)"
 						class="mb-3 rounded border border-outline-gray-2 p-3"
 						:data-registration-extension-action="action.name"
 						:aria-busy="registrationActionState(action).loading"

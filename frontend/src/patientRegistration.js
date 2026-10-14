@@ -163,7 +163,8 @@ export function registrationActionResultIsCurrent(
 	return stateVersion === requestVersion && expectedFingerprint === currentFingerprint;
 }
 
-export function registrationActionVisible(state) {
+export function registrationActionVisible(state, action = null) {
+	if (action?.silent) return false;
 	return Boolean(state?.loading || state?.response || state?.error);
 }
 

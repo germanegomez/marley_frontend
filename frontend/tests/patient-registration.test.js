@@ -221,6 +221,7 @@ test("an action panel has no inactive state footprint", () => {
 	assert.equal(registrationActionVisible({ loading: true, response: null, error: "" }), true);
 	assert.equal(registrationActionVisible({ loading: false, response: { status: "ok" }, error: "" }), true);
 	assert.equal(registrationActionVisible({ loading: false, response: null, error: "Failure" }), true);
+	assert.equal(registrationActionVisible({ loading: true }, { silent: true }), false);
 });
 
 test("the native layout stays unchanged when no field layout is configured", () => {
