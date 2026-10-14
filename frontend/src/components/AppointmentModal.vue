@@ -571,6 +571,9 @@
 		const disabled = Boolean(configuration.disabled);
 		control.setAttribute('aria-disabled', String(disabled));
 		if ('disabled' in control) control.disabled = disabled;
+		if (typeof configuration.autocomplete === 'string') {
+			control.setAttribute('autocomplete', configuration.autocomplete);
+		}
 	};
 	const vRegistrationControl = {
 		mounted: (element, binding) => setRegistrationControlAccessibility(element, binding.value),
@@ -853,11 +856,19 @@
 		return `${registrationFieldBaseId(name)}-error`;
 	}
 
-	function registrationAccessibility(name, required, description, error, disabled = false) {
+	function registrationAccessibility(
+		name,
+		required,
+		description,
+		error,
+		disabled = false,
+		autocomplete = undefined,
+	) {
 		return {
 			name,
 			required,
 			disabled,
+			autocomplete,
 			describedBy: [
 				description ? registrationFieldDescriptionId(name) : '',
 				error ? registrationFieldErrorId(name) : '',
@@ -872,6 +883,7 @@
 			registrationBuiltInDescription(name),
 			errors.value[name],
 			registrationBuiltInDisabled(name),
+			registrationExtension?.builtInFields?.[name]?.autocomplete,
 		);
 	}
 
@@ -882,6 +894,7 @@
 			registrationExtensionFieldDescription(field),
 			errors.value[`extension_${field.name}`],
 			registrationExtensionFieldDisabled(field),
+			field.autocomplete,
 		);
 	}
 

@@ -461,6 +461,8 @@ test("registration controls fill their grid cells without changing layout order"
 	assert.match(component, /aria-describedby/);
 	assert.match(component, /aria-required/);
 	assert.match(component, /aria-disabled/);
+	assert.match(component, /control\.setAttribute\('autocomplete', configuration\.autocomplete\)/);
+	assert.match(component, /field\.autocomplete/);
 	assert.match(component, /text\.textContent = `\(\$\{t\('required'\)\}\)`/);
 	assert.match(component, /const missing = registrationBuiltInRequired\(name\) && !value/);
 	assert.match(component, /label: t\('Select an option'\), value: '', disabled: true/);
