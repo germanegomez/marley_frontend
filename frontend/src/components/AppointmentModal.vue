@@ -502,6 +502,7 @@
 		registrationActionDependsOn,
 		registrationActionError,
 		registrationActionFingerprint,
+		registrationActionOptionUpdates,
 		registrationActionParams,
 		registrationActionReady,
 		registrationActionResultIsCurrent,
@@ -765,6 +766,7 @@
 		return {
 			options: registrationExtensionOptions.value,
 			builtIn: registrationBuiltInValues(),
+			actions: registrationActionStates,
 		};
 	}
 
@@ -974,6 +976,9 @@
 			for (const name of action.clearFields || []) {
 				registrationExtensionValues[name] = '';
 			}
+			for (const name of action.clearOptions || []) {
+				registrationExtensionOptions.value[name] = [];
+			}
 		}
 	}
 
@@ -1021,6 +1026,15 @@
 				Object.assign(
 					registrationExtensionValues,
 					registrationActionUpdates(
+						action,
+						response,
+						registrationExtensionValues,
+						currentContext,
+					),
+				);
+				Object.assign(
+					registrationExtensionOptions.value,
+					registrationActionOptionUpdates(
 						action,
 						response,
 						registrationExtensionValues,

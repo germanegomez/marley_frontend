@@ -12,6 +12,7 @@ import {
 	registrationActionDependsOn,
 	registrationActionError,
 	registrationActionFingerprint,
+	registrationActionOptionUpdates,
 	registrationActionParams,
 	registrationActionReady,
 	registrationActionResultIsCurrent,
@@ -179,6 +180,19 @@ test("declarative actions preserve entered values and apply only configured upda
 		registrationActionUpdates(action, { id: "VAL-1" }, values, context),
 		{ validation_id: "VAL-1" },
 	);
+	assert.deepEqual(
+		registrationActionOptionUpdates(
+			{
+				...action,
+				applyOptions: response => ({ plans: response.options }),
+			},
+			{ options: [{ label: "Plan A", value: "A" }] },
+			values,
+			context,
+		),
+		{ plans: [{ label: "Plan A", value: "A" }] },
+	);
+	assert.deepEqual(registrationActionOptionUpdates(action, {}, values, context), {});
 	assert.deepEqual(values, before);
 	assert.deepEqual(
 		registrationActionResultRows(

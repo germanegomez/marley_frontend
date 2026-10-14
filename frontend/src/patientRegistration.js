@@ -124,6 +124,12 @@ export function registrationActionUpdates(action, response, values, context = {}
 	return updates && typeof updates === "object" ? updates : {};
 }
 
+export function registrationActionOptionUpdates(action, response, values, context = {}) {
+	if (typeof action?.applyOptions !== "function") return {};
+	const updates = action.applyOptions(response, values, context);
+	return updates && typeof updates === "object" ? updates : {};
+}
+
 export function registrationActionResultRows(action, response, values, context = {}) {
 	return (action?.result?.rows || [])
 		.filter(row => Boolean(evaluateSetting(row.visible, values, context, true)))
