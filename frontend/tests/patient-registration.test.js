@@ -544,6 +544,10 @@ test("address fields keep their generic built-in and extension contracts", () =>
 	assert.equal((addressTemplate.match(/class="w-full"/g) || []).length, 2);
 	assert.doesNotMatch(addressTemplate, /(?:^|\s)(?:order-|col-span-)/);
 	assert.match(
+		addressTemplate,
+		/:disabled="registrationExtensionFieldDisabled\(item\.field\)"/,
+	);
+	assert.match(
 		component,
 		/const addressLayout = buildPatientRegistrationSectionLayout\([\s\S]*?'address'/,
 	);

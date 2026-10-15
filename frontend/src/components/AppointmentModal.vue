@@ -386,7 +386,7 @@
 							:label="t(item.field.label || item.name)"
 							:placeholder="registrationExtensionFieldPlaceholder(item.field)"
 							:required="Boolean(item.field.required)"
-							:disabled="Boolean(item.field.disabled || item.field.derive)"
+							:disabled="registrationExtensionFieldDisabled(item.field)"
 						/>
 						<FormControl
 							v-else
