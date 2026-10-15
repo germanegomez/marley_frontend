@@ -462,8 +462,8 @@ test("registration controls fill their grid cells without changing layout order"
 	assert.match(component, /registrationSectionsForPlacement\(registrationExtension, 'before-address'\)/);
 	assert.match(component, /registrationSectionLayout\(section\)/);
 	assert.match(component, /v-show="item\.kind === 'empty' \|\| registrationExtensionFieldVisible\(item\.field\)"/);
-	assert.match(component, /item\.field\.type === 'date'[\s\S]*<DatePicker/);
-	assert.match(component, /:required="registrationExtensionFieldRequired\(item\.field\)"/);
+	assert.match(component, /item\.field\.type === 'date'[\s\S]*<LocalizedDatePicker/);
+	assert.match(component, /registrationExtensionFieldRequired\(item\.field\)/);
 	assert.match(
 		component,
 		/\[data-patient-registration-form\][\s\S]*?:deep\(button\[role='combobox'\]\)[\s\S]*?width:\s*100%/,
@@ -491,13 +491,37 @@ test("birth date uses the shared date-control label and spacing contract", () =>
 	);
 	assert.match(
 		component,
-		/v-else-if="item\.name === 'dob'"[\s\S]*?<label[\s\S]*?data-registration-date-control[\s\S]*?t\(registrationBuiltInLabel\('dob'\)\)[\s\S]*?<DatePicker/,
+		/v-else-if="item\.name === 'dob'"[\s\S]*?<label[\s\S]*?data-registration-date-control[\s\S]*?t\(registrationBuiltInLabel\('dob'\)\)[\s\S]*?<LocalizedDatePicker/,
 	);
 	assert.match(
 		component,
 		/data-registration-date-control[\s\S]*?registrationBuiltInRequired\('dob'\)[\s\S]*?\(required\)/,
 	);
-	assert.doesNotMatch(component, /<DatePicker[\s\S]*?:label="t\(registrationBuiltInLabel\('dob'\)\)"/);
+	assert.doesNotMatch(component, /<LocalizedDatePicker[\s\S]*?:label="t\(registrationBuiltInLabel\('dob'\)\)"/);
+	assert.match(component, /input\.required = false/);
+	assert.match(component, /control\.required = false/);
+});
+
+test("registration date pickers localize visible and accessible calendar text", () => {
+	const component = readFileSync(
+		new URL("../src/components/LocalizedDatePicker.vue", import.meta.url),
+		"utf8",
+	);
+	assert.match(component, /datePickerLocale\(\)/);
+	assert.match(component, /Intl\.DateTimeFormat\(locale, \{ month: 'short' \}\)/);
+	assert.match(component, /Intl\.DateTimeFormat\(locale, \{ weekday: 'long' \}\)/);
+	for (const message of [
+		"Previous month",
+		"Next month",
+		"Calendar dates",
+		"Select month",
+		"Select year",
+		"Today",
+		"Tomorrow",
+		"Clear",
+	]) {
+		assert.match(component, new RegExp(`t\\('${message}'\\)`), message);
+	}
 });
 
 test("declarative sections keep responsive three-column order and full-width controls", () => {
