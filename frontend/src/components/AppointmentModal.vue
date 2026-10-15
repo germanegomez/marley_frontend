@@ -116,13 +116,12 @@
 										<span class="sr-only"> ({{ t('required') }})</span>
 									</template>
 								</span>
-								<DatePicker
+								<LocalizedDatePicker
 									:modelValue="registrationExtensionFieldValue(item.field)"
 									@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
 									@blur="runRegistrationFieldActions(item.field, 'blur')"
 									variant="subtle"
 									:placeholder="registrationExtensionFieldPlaceholder(item.field)"
-									:required="registrationExtensionFieldRequired(item.field)"
 									:disabled="registrationExtensionFieldDisabled(item.field)"
 									:formatter="(date) => getFormat(date, '', true)"
 								/>
@@ -172,14 +171,13 @@
 										<span class="sr-only"> ({{ t('required') }})</span>
 									</template>
 								</span>
-								<DatePicker
+								<LocalizedDatePicker
 									:modelValue="registrationBuiltInValue('dob')"
 									@update:modelValue="value => setRegistrationBuiltInValue('dob', value)"
 									class="w-full"
 									variant="subtle"
 									:placeholder="registrationBuiltInPlaceholder('dob')"
 									:disabled="registrationBuiltInDisabled('dob')"
-									:required="registrationBuiltInRequired('dob')"
 									:formatter="(date) => getFormat(date, '', true)"
 								/>
 							</label>
@@ -267,14 +265,13 @@
 										<span class="sr-only"> ({{ t('required') }})</span>
 									</template>
 								</span>
-								<DatePicker
+								<LocalizedDatePicker
 									:modelValue="registrationExtensionFieldValue(item.field)"
 									@update:modelValue="value => setRegistrationExtensionFieldValue(item.field, value)"
 									@blur="runRegistrationFieldActions(item.field, 'blur')"
 									class="w-full"
 									variant="subtle"
 									:placeholder="registrationExtensionFieldPlaceholder(item.field)"
-									:required="registrationExtensionFieldRequired(item.field)"
 									:disabled="registrationExtensionFieldDisabled(item.field)"
 									:formatter="(date) => getFormat(date, '', true)"
 								/>
@@ -491,6 +488,7 @@
 	import { appointmentDeskTranslation as t } from '@/translation'
 	import { reactive, ref, watch } from 'vue'
 	import { createResource, Switch, DatePicker, ErrorMessage } from "frappe-ui"
+	import LocalizedDatePicker from '@/components/LocalizedDatePicker.vue'
 	import { getFormat } from '@/utils'
 	import {
 		appointmentUrl,
@@ -533,7 +531,7 @@
 	const setRegistrationRequired = (element, required) => {
 		const input = element.matches('input') ? element : element.querySelector('input');
 		if (!input) return;
-		input.required = Boolean(required);
+		input.required = false;
 		input.setAttribute('aria-required', String(Boolean(required)));
 	};
 	const vRegistrationRequired = {
@@ -568,7 +566,7 @@
 		else control.removeAttribute('aria-describedby');
 		const required = Boolean(configuration.required);
 		control.setAttribute('aria-required', String(required));
-		if ('required' in control) control.required = required;
+		if ('required' in control) control.required = false;
 		const disabled = Boolean(configuration.disabled);
 		control.setAttribute('aria-disabled', String(disabled));
 		if ('disabled' in control) control.disabled = disabled;
